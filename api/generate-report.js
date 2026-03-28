@@ -1,5 +1,4 @@
 const FIELD_KEYS = {
-  // demographics
   email: "question_LdyWl2",
   age: "question_5d5xpE",
   gender: "question_dYVdkK",
@@ -7,34 +6,13 @@ const FIELD_KEYS = {
   relationship_status: "question_DVyzZZ",
   relationship_structure: "question_lNZrMv",
   country: "question_RzlPVj",
-
-  // health
   diagnosed_conditions_binary: "question_oAQGkx",
   diagnosed_conditions_text: "question_GrylQk",
 
-  // attachment
   attachment: "question_OAyGog",
-
-  // personality
   personality: "question_VZyJ4y",
-
-  // depression
   depression: "question_PAyOGe",
-
-  // anxiety
-  anxiety: "question_EPYWNr",
-
-  // relationship quality
-  relationship_happiness: "question_oAQGkP",
-  relationship_functioning: "question_GrylQZ",
-  relationship_warmth: "question_OAyGoR",
-
-  // sexual functioning domains
-  sexual_desire: "question_EPYWN4",
-  sexual_arousal: "question_42drzX",
-  orgasm: "question_245P7j",
-  physical_pain: "question_NAyodl",
-  sexual_satisfaction: "question_QAyVk7"
+  anxiety: "question_EPYWNr"
 };
 
 const getField = (fields, key) =>
@@ -46,6 +24,7 @@ const getSelectedOptionText = (field) => {
   const selectedOption = field.options.find((opt) => opt.id === selectedId);
   return selectedOption ? selectedOption.text : null;
 };
+
 const parseMatrixResponses = (field) => {
   if (!field || !field.rows || !field.columns || !field.value) return [];
 
@@ -102,10 +81,19 @@ const scoreResponses = (responses, map) => {
 const sumScores = (responses) =>
   responses.reduce((total, r) => total + (r.score ?? 0), 0);
 
+const meanScore = (responses) => {
+  const valid = responses.filter(r => r.score !== null);
+  if (valid.length === 0) return null;
+  return valid.reduce((sum, r) => sum + r.score, 0) / valid.length;
+};
+
 export default async function handler(req, res) {
   try {
     const fields = req.body.data.fields;
 
+    // =====================
+    // BASIC INFO
+    // =====================
     const output = {
       email: getField(fields, FIELD_KEYS.email)?.value ?? null,
       age: getField(fields, FIELD_KEYS.age)?.value ?? null,
@@ -118,35 +106,93 @@ export default async function handler(req, res) {
       diagnosed_conditions_text: getField(fields, FIELD_KEYS.diagnosed_conditions_text)?.value ?? null
     };
 
+    // =====================
+    // PARSE RESPONSES
+    // =====================
+    const attachmentResponses = parseMatrixResponses(
+      getField(fields, FIELD_KEYS.attachment)
+    );
+
+    const personalityResponses = parseMatrixResponses(
+      getField(fields, FIELD_KEYS.personality)
+    );
+
+    const depressionResponses = parseMatrixResponses(
+      getField(fields, FIELD_KEYS.depression)
+    );
+
+    const anxietyResponses = parseMatrixResponses(
+      getField(fields, FIELD_KEYS.anxiety)
+    );
+
+    // =====================
+    // SCORE RESPONSES
+    // =====================
     const scoredAttachment = scoreResponses(attachmentResponses, RESPONSE_MAPS.ecr7);
     const scoredPersonality = scoreResponses(personalityResponses, RESPONSE_MAPS.bfi5);
     const scoredDepression = scoreResponses(depressionResponses, RESPONSE_MAPS.phq4);
     const scoredAnxiety = scoreResponses(anxietyResponses, RESPONSE_MAPS.gad4);
 
     const attachmentTotal = sumScores(scoredAttachment);
-    const personalityTotal = sumScores(scoredPersonality);
+    const personalityMean = meanScore(scoredPersonality);
     const depressionTotal = sumScores(scoredDepression);
     const anxietyTotal = sumScores(scoredAnxiety);
 
-    console.log("TOTALS:", JSON.stringify({
-      attachmentTotal,
-      personalityTotal,
-      depressionTotal,
-      anxietyTotal
-    }, null, 2));
+    // =====================
+    // CLASSIFICATION LOGIC
+    // =====================
+    const classifyDepression = (score) => {
+      if (score <= 4) return "minimal";
+      if (score <= 9) return "mild";
+      if (score <= 14) return "moderate";
+      return "severe";
+    };
 
-    return res.status(200).json({
-      output,
-      totals: {
-        attachmentTotal,
-        personalityTotal,
-        depressionTotal,
-        anxietyTotal
+    const classifyAnxiety = (score) => {
+      if (score <= 4) return "minimal";
+      if (score <= 9) return "mild";
+      if (score <= 14) return "moderate";
+      return "severe";
+    };
+
+    const classifyAttachment = (mean) => {
+      if (mean === null) return "unknown";
+      if (mean > 4.5) return "insecure pattern";
+      return "generally secure pattern";
+    };
+
+    // =====================
+    // FINAL OBJECT
+    // =====================
+    const results = {
+      demographics: output,
+
+      attachment: {
+        total: attachmentTotal,
+        mean: meanScore(scoredAttachment),
+        profile: classifyAttachment(meanScore(scoredAttachment))
+      },
+
+      personality: {
+        mean: personalityMean
+      },
+
+      mental_health: {
+        depression: {
+          score: depressionTotal,
+          severity: classifyDepression(depressionTotal)
+        },
+        anxiety: {
+          score: anxietyTotal,
+          severity: classifyAnxiety(anxietyTotal)
+        }
       }
-    });
+    };
 
-    
-    
+    console.log("FINAL REPORT DEBUG:", JSON.stringify(results, null, 2));
+
+    return res.status(200).json(results);
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Failed" });
