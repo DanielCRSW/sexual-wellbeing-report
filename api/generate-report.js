@@ -455,7 +455,9 @@ export default async function handler(req, res) {
     if (!Array.isArray(fields)) {
       return res.status(400).json({ error: "No fields found" });
     }
-
+    
+console.log("ALL FIELDS:", JSON.stringify(fields, null, 2));
+    
     const relationshipStatus = getSelectedOptionText(getField(fields, FIELD_KEYS.relationship_status));
     const diagnosedConditionsBinary = getSelectedOptionText(
       getField(fields, FIELD_KEYS.diagnosed_conditions_binary)
