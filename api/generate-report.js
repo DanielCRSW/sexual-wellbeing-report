@@ -1330,20 +1330,22 @@ try {
     }
 
 // Brevo email
+
 let emailResult = null;
 try {
-  if (demographics.email) {
-    const pdfUrl = pdfmonkey?.document?.preview_url;
+  const pdfUrl = pdfmonkey?.document?.preview_url;
 
-emailResult = await sendEmailWithBrevo(
-  demographics.email,
-  demographics.name,
-  pdfUrl
-);
+  if (demographics.email && pdfUrl) {
+    emailResult = await sendEmailWithBrevo(
+      demographics.email,
+      demographics.name,
+      pdfUrl
+    );
+    console.log("EMAIL RESULT:", emailResult);
+  }
 } catch (emailError) {
   console.error("EMAIL ERROR:", emailError);
 }
-
     
     const responseBody = {
       ...final,
