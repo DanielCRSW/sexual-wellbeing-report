@@ -507,9 +507,9 @@ function shortSeverityLabel(label) {
   if (label.includes("High body satisfaction")) return "High";
   if (label.includes("Lower sexual wellbeing")) return "Low";
   if (label.includes("Higher sexual wellbeing")) return "High";
-  if (label.includes("Good sexual function")) return "Low";
-  if (label.includes("Lowered sexual function")) return "Moderate";
-  if (label.includes("Difficulties in sexual function")) return "High";
+  if (label.includes("Good sexual function")) return "Good function";
+  if (label.includes("Lowered sexual function")) return "Moderate function";
+  if (label.includes("Difficulties in sexual function")) return "High difficulties";
   if (label === "Lower") return "Low";
   if (label === "Higher") return "High";
 
