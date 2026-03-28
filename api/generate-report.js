@@ -63,9 +63,27 @@ export default async function handler(req, res) {
       diagnosed_conditions_text: getField(fields, FIELD_KEYS.diagnosed_conditions_text)?.value ?? null
     };
 
-    console.log("BASIC OUTPUT:", JSON.stringify(output, null, 2));
+    const attachmentField = getField(fields, FIELD_KEYS.attachment);
 
-    return res.status(200).json(output);
+    const attachmentResponses = attachmentField.rows.map((row) => {
+      const selectedColumnId = attachmentField.value[row.id]?.[0] ?? null;
+      const selectedColumn = attachmentField.columns.find(
+        (col) => col.id === selectedColumnId
+      );
+
+      return {
+        item: row.text,
+        response: selectedColumn ? selectedColumn.text : null
+      };
+    });
+
+    console.log("BASIC OUTPUT:", JSON.stringify(output, null, 2));
+    console.log("ATTACHMENT RESPONSES:", JSON.stringify(attachmentResponses, null, 2));
+
+    return res.status(200).json({
+      output,
+      attachmentResponses
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Failed" });
