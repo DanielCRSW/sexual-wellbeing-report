@@ -1,3 +1,5 @@
+// api/generate-report.js
+
 const FIELD_KEYS = {
   // demographics
   email: "question_LdyWl2",
@@ -17,6 +19,12 @@ const FIELD_KEYS = {
   anxiety: "question_EPYWNr",
   ders16: "question_42drpY",
   biss: "question_rlWPkR",
+
+  // WHOQOL
+  whoqol_physical_1: "question_jB2Pk4",
+  whoqol_physical_2: "question_245PD9",
+  whoqol_env_1: "question_xdBYl5",
+  whoqol_env_2: "question_RzlPV9",
 
   // relationship
   relationship_happiness: "question_oAQGkP",
@@ -39,7 +47,7 @@ const FIELD_KEYS = {
   pain_severity: "question_qbeVvG",
   sexual_satisfaction: "question_QAyVk7",
 
-  // natsal-sf
+  // NATSAL-SF
   natsal_low_desire: "question_9d5QMQ",
   natsal_low_desire_distress: "question_eBPRve",
   natsal_arousal: "question_WAdz1N",
@@ -61,7 +69,7 @@ const FIELD_KEYS = {
   natsal_negative_impact: "question_ylkYzg",
   natsal_negative_impact_distress: "question_Xey0zg",
 
-  // natsal-sw
+  // NATSAL-SW
   natsal_sw: "question_8d5xM5"
 };
 
@@ -204,6 +212,18 @@ const RESPONSE_MAPS = {
     "Somewhat agree": 5,
     "Agree": 6,
     "Strongly agree": 7
+  },
+  whoqol5: {
+    "Not at all": 1,
+    "A little": 2,
+    "Moderately": 3,
+    "Mostly": 4,
+    "Completely": 5,
+    "Very dissatisfied": 1,
+    "Dissatisfied": 2,
+    "Neither satisfied nor dissatisfied": 3,
+    "Satisfied": 4,
+    "Very satisfied": 5
   }
 };
 
@@ -218,6 +238,14 @@ function cleanText(value) {
   return trimmed === "" ? null : trimmed;
 }
 
+function round2(value) {
+  return value == null ? null : Math.round(value * 100) / 100;
+}
+
+function round0(value) {
+  return value == null ? null : Math.round(value);
+}
+
 function getSelectedOptionText(field) {
   if (!field || field.value == null || !field.options) return null;
   const selectedId = Array.isArray(field.value) ? field.value[0] : field.value;
@@ -227,9 +255,11 @@ function getSelectedOptionText(field) {
 
 function parseMatrixResponses(field) {
   if (!field || !field.rows || !field.columns || !field.value) return [];
+
   return field.rows.map((row) => {
     const selectedColumnId = field.value[row.id]?.[0] ?? null;
     const selectedColumn = field.columns.find((col) => col.id === selectedColumnId);
+
     return {
       item: cleanText(row.text),
       response: selectedColumn ? cleanText(selectedColumn.text) : null
@@ -253,10 +283,6 @@ function meanScores(responses) {
   const valid = responses.filter((r) => r.score !== null);
   if (!valid.length) return null;
   return valid.reduce((total, r) => total + r.score, 0) / valid.length;
-}
-
-function round2(value) {
-  return value == null ? null : Math.round(value * 100) / 100;
 }
 
 function reverseFive(score) {
@@ -349,6 +375,14 @@ function classifyNatsalSW(mean) {
   return "Higher sexual wellbeing";
 }
 
+function interpretWHOQOL(score) {
+  if (score == null) return null;
+  if (score <= 40) return "Poor";
+  if (score <= 60) return "Fair";
+  if (score <= 80) return "Good";
+  return "Very Good";
+}
+
 function mapByItem(scoredResponses) {
   const out = {};
   for (const row of scoredResponses) out[row.item] = row.score;
@@ -373,20 +407,55 @@ function scoreNatsalProblem(yesNoField, distressField) {
   return null;
 }
 
+function scoreWHOQOLItems(responses, reverseIndices = []) {
+  return responses
+    .map((r, i) => {
+      let score = RESPONSE_MAPS.whoqol5[r.response] ?? null;
+      if (reverseIndices.includes(i)) score = reverseFive(score);
+      return { ...r, score };
+    })
+    .filter((r) => r.score != null);
+}
+
+function buildBFIParagraph(personality) {
+  const bits = [
+    personality.extraversion_label ? `Extraversion appears ${personality.extraversion_label.toLowerCase()}` : null,
+    personality.agreeableness_label ? `agreeableness appears ${personality.agreeableness_label.toLowerCase()}` : null,
+    personality.conscientiousness_label ? `conscientiousness appears ${personality.conscientiousness_label.toLowerCase()}` : null,
+    personality.neuroticism_label ? `emotional reactivity appears ${personality.neuroticism_label.toLowerCase()}` : null,
+    personality.openness_label ? `openness appears ${personality.openness_label.toLowerCase()}` : null
+  ].filter(Boolean);
+
+  if (!bits.length) return null;
+  return bits.join(", ") + ".";
+}
+
+const WHOQOL_TEXT = {
+  physical: {
+    Poor: "Your responses suggest your physical health is significantly affecting your quality of life. Pain, low energy, sleep difficulties, or reduced day-to-day functioning may be having a meaningful impact.",
+    Fair: "Your responses suggest your physical health is having a moderate impact on your quality of life. Some difficulties may be noticeable at times, even if they are not overwhelming.",
+    Good: "Your responses suggest your physical health is generally good and not significantly interfering with daily life. Physical concerns do not appear to be creating major limitations most days.",
+    "Very Good": "Your responses suggest your physical health is a strength in your overall profile. Physical concerns do not appear to be significantly affecting your day-to-day functioning at this time."
+  },
+  environment: {
+    Poor: "Your responses suggest your environment is significantly affecting your quality of life. Factors such as safety, resources, services, or living conditions may be placing strain on wellbeing.",
+    Fair: "Your responses suggest your environment is having a moderate impact on your quality of life. Some parts of your living situation or access to resources may be creating stress or limitation.",
+    Good: "Your responses suggest your environment is generally supportive. Your living situation, access to resources, and broader environment do not appear to be creating major barriers.",
+    "Very Good": "Your responses suggest your environment is a strength in your overall profile. You appear to have good access to resources and a stable, supportive practical environment."
+  }
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
-  
-try {
-  const fields = req.body?.data?.fields;
 
-  console.log("ALL FIELDS:", JSON.stringify(fields, null, 2));  // ✅ move here
+  try {
+    const fields = req.body?.data?.fields;
+    if (!Array.isArray(fields)) {
+      return res.status(400).json({ error: "No fields found" });
+    }
 
-  if (!Array.isArray(fields)) {
-    return res.status(400).json({ error: "No fields found" });
-  }
-  
     const relationshipStatus = getSelectedOptionText(getField(fields, FIELD_KEYS.relationship_status));
     const diagnosedConditionsBinary = getSelectedOptionText(
       getField(fields, FIELD_KEYS.diagnosed_conditions_binary)
@@ -513,6 +582,7 @@ try {
     personality.conscientiousness_label = classifyBFITrait(personality.conscientiousness);
     personality.neuroticism_label = classifyBFITrait(personality.neuroticism);
     personality.openness_label = classifyBFITrait(personality.openness);
+    personality.paragraph = buildBFIParagraph(personality);
 
     // ---------- PHQ / GAD ----------
     const depressionScore = sumScores(scoredDepression);
@@ -530,8 +600,6 @@ try {
     };
 
     // ---------- DERS ----------
-    const dersMap = mapByItem(scoredDERS);
-
     const dersReverseItems = [
       "I am clear about my feelings",
       "I pay attention to how I feel",
@@ -560,6 +628,40 @@ try {
     const body_image = {
       mean: round2(bissMean),
       label: classifyBISS(bissMean)
+    };
+
+    // ---------- WHOQOL ----------
+    const whoqolPhysicalResponses = [
+      ...parseMatrixResponses(getField(fields, FIELD_KEYS.whoqol_physical_1)),
+      ...parseMatrixResponses(getField(fields, FIELD_KEYS.whoqol_physical_2))
+    ];
+
+    const scoredWhoqolPhysical = scoreWHOQOLItems(whoqolPhysicalResponses, [0, 1]);
+    const whoqolPhysicalSum = scoredWhoqolPhysical.reduce((sum, r) => sum + r.score, 0);
+    const whoqolPhysicalScore = ((whoqolPhysicalSum - 7) / (35 - 7)) * 100;
+    const whoqolPhysicalLabel = interpretWHOQOL(whoqolPhysicalScore);
+
+    const whoqolEnvironmentResponses = [
+      ...parseMatrixResponses(getField(fields, FIELD_KEYS.whoqol_env_1)),
+      ...parseMatrixResponses(getField(fields, FIELD_KEYS.whoqol_env_2))
+    ];
+
+    const scoredWhoqolEnvironment = scoreWHOQOLItems(whoqolEnvironmentResponses, []);
+    const whoqolEnvironmentSum = scoredWhoqolEnvironment.reduce((sum, r) => sum + r.score, 0);
+    const whoqolEnvironmentScore = ((whoqolEnvironmentSum - 8) / (40 - 8)) * 100;
+    const whoqolEnvironmentLabel = interpretWHOQOL(whoqolEnvironmentScore);
+
+    const quality_of_life = {
+      physical: {
+        score: round0(whoqolPhysicalScore),
+        label: `Physical Health: ${whoqolPhysicalLabel}`,
+        text: WHOQOL_TEXT.physical[whoqolPhysicalLabel]
+      },
+      environment: {
+        score: round0(whoqolEnvironmentScore),
+        label: `Environment: ${whoqolEnvironmentLabel}`,
+        text: WHOQOL_TEXT.environment[whoqolEnvironmentLabel]
+      }
     };
 
     // ---------- CSI ----------
@@ -745,23 +847,68 @@ try {
       label: classifyNatsalSW(natsalSwMean)
     };
 
-    const results = {
+    // ---------- Final output ----------
+    const final = {
       demographics,
       attachment,
       personality,
       mental_health,
       emotion_regulation,
       body_image,
+      quality_of_life,
       relationship,
       sexual_self_efficacy,
       sexual_flexibility,
       sexual_function,
       natsal_sf,
-      natsal_sw
+      natsal_sw,
+
+      // helpful prompt-ready fields
+      report_fields: {
+        gender: demographics.gender,
+        age: demographics.age,
+        sexual_orientation: demographics.sexual_orientation,
+        relationship_status: demographics.relationship_status,
+        relationship_structure: demographics.relationship_structure,
+        diagnosed_conditions_text: demographics.diagnosed_conditions_text,
+
+        ecr12_label: attachment.profile,
+        ecr12_text:
+          attachment.profile === "Secure"
+            ? "Your responses suggest a generally secure attachment pattern."
+            : attachment.profile === "Anxious"
+              ? "Your responses suggest an anxious attachment pattern, with greater sensitivity to closeness, reassurance, or loss."
+              : attachment.profile === "Avoidant"
+                ? "Your responses suggest an avoidant attachment pattern, with more discomfort around closeness or emotional dependence."
+                : attachment.profile === "Fearful"
+                  ? "Your responses suggest a fearful attachment pattern, with both sensitivity to rejection and discomfort with closeness."
+                  : null,
+
+        bfi10_paragraph: personality.paragraph,
+
+        phq8_label: mental_health.depression.label,
+        gad7_label: mental_health.anxiety.label,
+        ders16_label: emotion_regulation.label,
+        biss_label: body_image.label,
+        whoqol_phys_label: quality_of_life.physical.label,
+        whoqol_phys_text: quality_of_life.physical.text,
+        whoqol_env_label: quality_of_life.environment.label,
+        whoqol_env_text: quality_of_life.environment.text,
+        csi4_label: relationship.label,
+        sse_label: sexual_self_efficacy.label,
+        sexflex_label: sexual_flexibility.label,
+        sexual_desire_label: sexual_function.desire.label,
+        sexual_arousal_label: sexual_function.arousal.label,
+        orgasm_label: sexual_function.orgasm.label,
+        pain_label: sexual_function.pain.label,
+        sexual_satisfaction_label: sexual_function.satisfaction.label,
+        natsal_sf_label: natsal_sf.label,
+        natsal_sw_label: natsal_sw.label
+      }
     };
 
-    console.log("FINAL REPORT DEBUG:", JSON.stringify(results, null, 2));
-    return res.status(200).json(results);
+    console.log("FINAL REPORT DEBUG:", JSON.stringify(final, null, 2));
+    return res.status(200).json(final);
   } catch (error) {
     console.error("HANDLER ERROR:", error);
     return res.status(500).json({
