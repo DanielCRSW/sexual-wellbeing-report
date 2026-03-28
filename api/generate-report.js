@@ -643,7 +643,7 @@ console.log('SEXUAL SAT DEBUG', {
     sfunc_orgasm_text: rf.sfunc_orgasm_text,
     sfunc_pain_label: rf.pain_label,
     sfunc_pain_text: rf.sfunc_pain_text,
-    sfunc_sat_label: rf.sexual_satisfaction_label,
+    sfunc_sat_label: rf.satisfaction_label,
     sfunc_sat_text: rf.sfunc_sat_text,
 
     natsal_sf_label: rf.natsal_sf_label,
