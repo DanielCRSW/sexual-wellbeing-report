@@ -1264,13 +1264,15 @@ export default async function handler(req, res) {
       report_fields
     };
 
-    // AI summary
-    let ai_summary = null;
-    try {
-      ai_summary = await generateAISummary(report_fields);
-    } catch (aiError) {
-      console.error("AI SUMMARY ERROR:", aiError);
-    }
+    console.log("OPENAI KEY EXISTS:", !!process.env.OPENAI_API_KEY);
+
+let ai_summary = null;
+try {
+  ai_summary = await generateAISummary(report_fields);
+} catch (aiError) {
+  console.error("AI SUMMARY ERROR:", aiError.message);
+  console.error("FULL ERROR:", aiError);
+}
 
     // PDFMonkey
     let pdfmonkey = null;
