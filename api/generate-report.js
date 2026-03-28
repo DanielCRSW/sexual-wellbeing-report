@@ -1344,7 +1344,7 @@ try {
     const responseBody = {
       ...final,
       ai_summary,
-      pdfmonkey
+      pdfmonkey,
       emailResult
     };
 
