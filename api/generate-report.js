@@ -570,14 +570,7 @@ async function generateAISummary(reportFields) {
 function buildPdfPayload(finalResult, aiSummary) {
   const rf = finalResult.report_fields;
 
-console.log('SEXUAL SAT DEBUG', {
-    sexual_satisfaction_label: rf.sexual_satisfaction_label,
-    sexual_satisfaction_text: rf.sexual_satisfaction_text,
-    satisfaction_label: rf.satisfaction_label,
-    sfunc_sat_label: rf.sfunc_sat_label
-  });
-
-  
+ 
   return {
     respondent_name: rf.name || "Assessment Participant",
     report_date: new Date().toLocaleDateString("en-AU"),
