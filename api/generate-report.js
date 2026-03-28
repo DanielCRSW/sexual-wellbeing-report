@@ -456,7 +456,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No fields found" });
     }
     
-console.log("ALL FIELDS:", JSON.stringify(fields, null, 2));
     
     const relationshipStatus = getSelectedOptionText(getField(fields, FIELD_KEYS.relationship_status));
     const diagnosedConditionsBinary = getSelectedOptionText(
@@ -464,6 +463,7 @@ console.log("ALL FIELDS:", JSON.stringify(fields, null, 2));
     );
 
     const demographics = {
+      name: cleanText(getField(fields, FIELD_KEYS.name)?.value) ?? null,
       email: cleanText(getField(fields, FIELD_KEYS.email)?.value) ?? null,
       age: getField(fields, FIELD_KEYS.age)?.value ?? null,
       gender: getSelectedOptionText(getField(fields, FIELD_KEYS.gender)),
@@ -867,6 +867,7 @@ console.log("ALL FIELDS:", JSON.stringify(fields, null, 2));
 
       // helpful prompt-ready fields
       report_fields: {
+        name: demographics.name,
         gender: demographics.gender,
         age: demographics.age,
         sexual_orientation: demographics.sexual_orientation,
