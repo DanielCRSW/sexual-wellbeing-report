@@ -498,10 +498,10 @@ function shortSeverityLabel(label) {
   if (label.includes("Mild")) return "Mild";
   if (label.includes("Moderate")) return "Moderate";
   if (label.includes("Moderately severe")) return "High";
-  if (label.includes("Severe")) return "High";
+  if (label.includes("Severe")) return "Very High";
   if (label.includes("Significant")) return "High";
-  if (label.includes("Generally good")) return "Low";
-  if (label.includes("Low body satisfaction")) return "Low";
+  if (label.includes("Generally good")) return "Good";
+  if (label.includes("Low body satisfaction")) return "Lower";
   if (label.includes("Moderate body satisfaction")) return "Moderate";
   if (label.includes("Good body satisfaction")) return "Good";
   if (label.includes("High body satisfaction")) return "High";
@@ -510,8 +510,9 @@ function shortSeverityLabel(label) {
   if (label.includes("Good sexual function")) return "Good function";
   if (label.includes("Lowered sexual function")) return "Moderate function";
   if (label.includes("Difficulties in sexual function")) return "High difficulties";
-  if (label === "Lower") return "Low";
-  if (label === "Higher") return "High";
+  if (label === "Lower") return "Lower";
+  if (label === "Moderate") return "Moderate";
+  if (label === "Higher") return "Higher";
 
   return label;
 }
