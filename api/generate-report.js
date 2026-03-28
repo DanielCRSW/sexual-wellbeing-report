@@ -700,7 +700,50 @@ async function sendToPdfMonkey(pdfPayload) {
 
   return JSON.parse(text);
 }
-  
+
+
+async function sendEmailWithBrevo(to, name) {
+  const brevoApiKey = process.env.BREVO_API_KEY;
+  if (!brevoApiKey) {
+    throw new Error("Missing BREVO_API_KEY");
+  }
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": brevoApiKey
+    },
+    body: JSON.stringify({
+      sender: {
+        name: "Centre for Relational & Sexual Wellbeing",
+        email: "info@centrersw.com"
+      },
+      to: [
+        {
+          email: to,
+          name: name || "Client"
+        }
+      ],
+      subject: "Your Sexual Wellbeing Report",
+      htmlContent: `
+        <p>Hi ${name || "there"},</p>
+        <p>Your report has been generated successfully.</p>
+        <p>We will send your completed report shortly.</p>
+      `
+    })
+  });
+
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`Brevo error: ${response.status} ${text}`);
+  }
+
+  return JSON.parse(text);
+}
+
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -1285,10 +1328,22 @@ try {
       console.error("PDFMONKEY ERROR:", pdfError);
     }
 
+// Brevo email
+let emailResult = null;
+try {
+  if (demographics.email) {
+    emailResult = await sendEmailWithBrevo(demographics.email, demographics.name);
+  }
+} catch (emailError) {
+  console.error("EMAIL ERROR:", emailError);
+}
+
+    
     const responseBody = {
       ...final,
       ai_summary,
       pdfmonkey
+      emailResult
     };
 
     console.log("FINAL REPORT DEBUG:", JSON.stringify(responseBody, null, 2));
