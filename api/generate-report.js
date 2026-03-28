@@ -46,6 +46,20 @@ const getSelectedOptionText = (field) => {
   const selectedOption = field.options.find((opt) => opt.id === selectedId);
   return selectedOption ? selectedOption.text : null;
 };
+const parseMatrixResponses = (field) => {
+  if (!field || !field.rows || !field.columns || !field.value) return [];
+
+  return field.rows.map((row) => {
+    const selectedColumnId = field.value[row.id]?.[0] ?? null;
+    const selectedColumn = field.columns.find((col) => col.id === selectedColumnId);
+
+    return {
+      item: row.text,
+      response: selectedColumn ? selectedColumn.text : null
+    };
+  });
+};
+
 
 export default async function handler(req, res) {
   try {
@@ -63,27 +77,36 @@ export default async function handler(req, res) {
       diagnosed_conditions_text: getField(fields, FIELD_KEYS.diagnosed_conditions_text)?.value ?? null
     };
 
-    const attachmentField = getField(fields, FIELD_KEYS.attachment);
+       const attachmentResponses = parseMatrixResponses(
+      getField(fields, FIELD_KEYS.attachment)
+    );
 
-    const attachmentResponses = attachmentField.rows.map((row) => {
-      const selectedColumnId = attachmentField.value[row.id]?.[0] ?? null;
-      const selectedColumn = attachmentField.columns.find(
-        (col) => col.id === selectedColumnId
-      );
+    const personalityResponses = parseMatrixResponses(
+      getField(fields, FIELD_KEYS.personality)
+    );
 
-      return {
-        item: row.text,
-        response: selectedColumn ? selectedColumn.text : null
-      };
-    });
+    const depressionResponses = parseMatrixResponses(
+      getField(fields, FIELD_KEYS.depression)
+    );
+
+    const anxietyResponses = parseMatrixResponses(
+      getField(fields, FIELD_KEYS.anxiety)
+    );
 
     console.log("BASIC OUTPUT:", JSON.stringify(output, null, 2));
     console.log("ATTACHMENT RESPONSES:", JSON.stringify(attachmentResponses, null, 2));
+    console.log("PERSONALITY RESPONSES:", JSON.stringify(personalityResponses, null, 2));
+    console.log("DEPRESSION RESPONSES:", JSON.stringify(depressionResponses, null, 2));
+    console.log("ANXIETY RESPONSES:", JSON.stringify(anxietyResponses, null, 2));
 
     return res.status(200).json({
       output,
-      attachmentResponses
+      attachmentResponses,
+      personalityResponses,
+      depressionResponses,
+      anxietyResponses
     });
+    
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Failed" });
