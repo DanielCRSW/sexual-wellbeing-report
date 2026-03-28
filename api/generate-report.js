@@ -34,31 +34,7 @@ const FIELD_KEYS = {
   sexual_arousal: "question_42drzX",
   orgasm: "question_245P7j",
   physical_pain: "question_NAyodl",
-  sexual_satisfaction: "question_QAyVk7",
-
-  // problem checklist
-  problems: {
-    low_desire: "question_9d5QMQ",
-    low_desire_distress: "question_eBPRve",
-    arousal: "question_WAdz1N",
-    arousal_distress: "question_aBodvB",
-    orgasm: "question_6d5NMk",
-    orgasm_distress: "question_7d5xMZ",
-    pain: "question_blGdvL",
-    pain_distress: "question_Al5vyD",
-    anxiety: "question_BG570Q",
-    anxiety_distress: "question_kYxEvR",
-    disconnection: "question_vNbYK0",
-    disconnection_distress: "question_KMy1k8",
-    desire_mismatch: "question_Ldypkv",
-    desire_mismatch_distress: "question_pL9OvJ",
-    avoidance: "question_1r5V6p",
-    avoidance_distress: "question_MAyRMM",
-    sexuality_distress: "question_J2YzMo",
-    sexuality_distress_level: "question_g5rGvO",
-    negative_impact: "question_ylkYzg",
-    negative_impact_distress: "question_Xey0zg"
-  }
+  sexual_satisfaction: "question_QAyVk7"
 };
 
 const getField = (fields, key) =>
@@ -75,17 +51,21 @@ export default async function handler(req, res) {
   try {
     const fields = req.body.data.fields;
 
-    const age = getField(fields, FIELD_KEYS.age)?.value;
-    const genderField = getField(fields, FIELD_KEYS.gender);
-    const gender = getSelectedOptionText(genderField);
+    const output = {
+      email: getField(fields, FIELD_KEYS.email)?.value ?? null,
+      age: getField(fields, FIELD_KEYS.age)?.value ?? null,
+      gender: getSelectedOptionText(getField(fields, FIELD_KEYS.gender)),
+      sexual_orientation: getSelectedOptionText(getField(fields, FIELD_KEYS.sexual_orientation)),
+      relationship_status: getSelectedOptionText(getField(fields, FIELD_KEYS.relationship_status)),
+      relationship_structure: getSelectedOptionText(getField(fields, FIELD_KEYS.relationship_structure)),
+      country: getField(fields, FIELD_KEYS.country)?.value ?? null,
+      diagnosed_conditions_binary: getSelectedOptionText(getField(fields, FIELD_KEYS.diagnosed_conditions_binary)),
+      diagnosed_conditions_text: getField(fields, FIELD_KEYS.diagnosed_conditions_text)?.value ?? null
+    };
 
-    console.log("AGE:", age);
-    console.log("GENDER TEXT:", gender);
+    console.log("BASIC OUTPUT:", JSON.stringify(output, null, 2));
 
-    return res.status(200).json({
-      age,
-      gender
-    });
+    return res.status(200).json(output);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Failed" });
