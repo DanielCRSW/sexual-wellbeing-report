@@ -1,6 +1,9 @@
 // api/generate-report.js
 
 const FIELD_KEYS = {
+  // personalisation
+  name: "question_vBevlX",
+
   // demographics
   email: "question_LdyWl2",
   age: "question_5d5xpE",
@@ -227,6 +230,21 @@ const RESPONSE_MAPS = {
   }
 };
 
+const WHOQOL_TEXT = {
+  physical: {
+    Poor: "Your responses suggest your physical health is significantly affecting your quality of life. Pain, low energy, sleep difficulties, or reduced day-to-day functioning may be having a meaningful impact.",
+    Fair: "Your responses suggest your physical health is having a moderate impact on your quality of life. Some difficulties may be noticeable at times, even if they are not overwhelming.",
+    Good: "Your responses suggest your physical health is generally good and not significantly interfering with daily life. Physical concerns do not appear to be creating major limitations most days.",
+    "Very Good": "Your responses suggest your physical health is a strength in your overall profile. Physical concerns do not appear to be significantly affecting your day-to-day functioning at this time."
+  },
+  environment: {
+    Poor: "Your responses suggest your environment is significantly affecting your quality of life. Factors such as safety, resources, services, or living conditions may be placing strain on wellbeing.",
+    Fair: "Your responses suggest your environment is having a moderate impact on your quality of life. Some parts of your living situation or access to resources may be creating stress or limitation.",
+    Good: "Your responses suggest your environment is generally supportive. Your living situation, access to resources, and broader environment do not appear to be creating major barriers.",
+    "Very Good": "Your responses suggest your environment is a strength in your overall profile. You appear to have good access to resources and a stable, supportive practical environment."
+  }
+};
+
 function getField(fields, key) {
   return fields.find((f) => f.key === key);
 }
@@ -287,14 +305,6 @@ function meanScores(responses) {
 
 function reverseFive(score) {
   return score == null ? null : 6 - score;
-}
-
-function reverseSix(score) {
-  return score == null ? null : 7 - score;
-}
-
-function reverseSeven(score) {
-  return score == null ? null : 8 - score;
 }
 
 function classifyPHQ8(score) {
@@ -430,20 +440,220 @@ function buildBFIParagraph(personality) {
   return bits.join(", ") + ".";
 }
 
-const WHOQOL_TEXT = {
-  physical: {
-    Poor: "Your responses suggest your physical health is significantly affecting your quality of life. Pain, low energy, sleep difficulties, or reduced day-to-day functioning may be having a meaningful impact.",
-    Fair: "Your responses suggest your physical health is having a moderate impact on your quality of life. Some difficulties may be noticeable at times, even if they are not overwhelming.",
-    Good: "Your responses suggest your physical health is generally good and not significantly interfering with daily life. Physical concerns do not appear to be creating major limitations most days.",
-    "Very Good": "Your responses suggest your physical health is a strength in your overall profile. Physical concerns do not appear to be significantly affecting your day-to-day functioning at this time."
-  },
-  environment: {
-    Poor: "Your responses suggest your environment is significantly affecting your quality of life. Factors such as safety, resources, services, or living conditions may be placing strain on wellbeing.",
-    Fair: "Your responses suggest your environment is having a moderate impact on your quality of life. Some parts of your living situation or access to resources may be creating stress or limitation.",
-    Good: "Your responses suggest your environment is generally supportive. Your living situation, access to resources, and broader environment do not appear to be creating major barriers.",
-    "Very Good": "Your responses suggest your environment is a strength in your overall profile. You appear to have good access to resources and a stable, supportive practical environment."
+function nonEmptyOrNull(value) {
+  const cleaned = cleanText(value);
+  return cleaned ? cleaned : null;
+}
+
+function buildPromptFields(reportFields) {
+  return `
+Name: ${reportFields.name ?? "Not provided"}
+Gender: ${reportFields.gender ?? "Not provided"}
+Age: ${reportFields.age ?? "Not provided"}
+Sexual orientation: ${reportFields.sexual_orientation ?? "Not provided"}
+Relationship status: ${reportFields.relationship_status ?? "Not provided"}
+Relationship structure: ${reportFields.relationship_structure ?? "Not applicable"}
+Diagnosed conditions context: ${reportFields.diagnosed_conditions_text ?? "Not provided"}
+
+Attachment profile: ${reportFields.ecr12_label ?? "Not provided"}
+Attachment interpretation: ${reportFields.ecr12_text ?? "Not provided"}
+
+Personality profile summary: ${reportFields.bfi10_paragraph ?? "Not provided"}
+
+Depression: ${reportFields.phq8_label ?? "Not provided"}
+Anxiety: ${reportFields.gad7_label ?? "Not provided"}
+Emotion regulation: ${reportFields.ders16_label ?? "Not provided"}
+Body image: ${reportFields.biss_label ?? "Not provided"}
+Physical quality of life: ${reportFields.whoqol_phys_label ?? "Not provided"}
+Physical quality of life text: ${reportFields.whoqol_phys_text ?? "Not provided"}
+Environmental quality of life: ${reportFields.whoqol_env_label ?? "Not provided"}
+Environmental quality of life text: ${reportFields.whoqol_env_text ?? "Not provided"}
+Relationship score summary: ${reportFields.csi4_label ?? "Not applicable"}
+
+Sexual self-efficacy: ${reportFields.sse_label ?? "Not provided"}
+Sexual flexibility: ${reportFields.sexflex_label ?? "Not provided"}
+
+Sexual desire: ${reportFields.sexual_desire_label ?? "Not provided"}
+Sexual arousal: ${reportFields.sexual_arousal_label ?? "Not provided"}
+Orgasm: ${reportFields.orgasm_label ?? "Not provided"}
+Pain: ${reportFields.pain_label ?? "Not provided"}
+Sexual satisfaction: ${reportFields.sexual_satisfaction_label ?? "Not provided"}
+
+NATSAL sexual function: ${reportFields.natsal_sf_label ?? "Not provided"}
+NATSAL sexual wellbeing: ${reportFields.natsal_sw_label ?? "Not provided"}
+`.trim();
+}
+
+function shortWHOQOLLabel(label) {
+  if (!label) return null;
+  return label
+    .replace("Physical Health: ", "")
+    .replace("Environment: ", "");
+}
+
+async function generateAISummary(reportFields) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+
+  const systemPrompt = [
+    "You are a compassionate and professional sexual wellbeing specialist writing a personalised summary for a client who has completed a comprehensive sexual wellbeing assessment.",
+    "Your tone is warm, non-judgmental, empowering, and professional.",
+    "You never pathologise, shame, or overstate certainty.",
+    "You do not list raw scores or rely on heavy clinical jargon.",
+    "You weave findings together into a coherent, human narrative.",
+    "Write exactly 2 to 3 paragraphs in plain prose only.",
+    "Do not use headings, bullet points, apostrophes, or quotation marks.",
+    "Do not mention any score numbers.",
+    "Do not invent details not present in the input.",
+    "Where results are mixed, reflect that nuance clearly.",
+    "Where a domain is marked not applicable, ignore it rather than commenting on it.",
+    "If a preferred name is provided, use it naturally once near the beginning and not repeatedly."
+  ].join(" ");
+
+  const userPrompt = buildPromptFields(reportFields);
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.6,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenAI error: ${response.status} ${errorText}`);
   }
-};
+
+  const data = await response.json();
+  const content = data?.choices?.[0]?.message?.content;
+  return nonEmptyOrNull(content);
+}
+
+function buildPdfPayload(finalResult, aiSummary) {
+  const rf = finalResult.report_fields;
+
+  return {
+    respondent_name: rf.name || "Assessment Participant",
+    email: finalResult.demographics.email,
+    gender: rf.gender,
+    age: rf.age,
+    sexual_orientation: rf.sexual_orientation,
+    relationship_status: rf.relationship_status,
+    relationship_structure: rf.relationship_structure,
+    diagnosed_conditions_text: rf.diagnosed_conditions_text,
+
+    ecr12_label: rf.ecr12_label,
+    ecr12_text: rf.ecr12_text,
+
+    bfi10_paragraph: rf.bfi10_paragraph,
+
+    phq8_label: rf.phq8_label,
+    gad7_label: rf.gad7_label,
+    ders16_label: rf.ders16_label,
+    biss_label: rf.biss_label,
+
+    whoqol_phys_label: rf.whoqol_phys_label,
+    whoqol_phys_text: rf.whoqol_phys_text,
+    whoqol_env_label: rf.whoqol_env_label,
+    whoqol_env_text: rf.whoqol_env_text,
+
+    csi4_label: rf.csi4_label,
+
+    sse_label: rf.sse_label,
+    sexflex_label: rf.sexflex_label,
+
+    sexual_desire_label: rf.sexual_desire_label,
+    sexual_arousal_label: rf.sexual_arousal_label,
+    orgasm_label: rf.orgasm_label,
+    pain_label: rf.pain_label,
+    sexual_satisfaction_label: rf.sexual_satisfaction_label,
+
+    natsal_sf_label: rf.natsal_sf_label,
+    natsal_sw_label: rf.natsal_sw_label,
+
+    // overview fields for summary table
+ecr12_overview: rf.ecr12_label,
+bfi10_overview: "See profile",
+phq8_overview: rf.phq8_label,
+gad7_overview: rf.gad7_label,
+ders16_overview: rf.ders16_label,
+biss_overview: rf.biss_label,
+whoqol_phys_overview: shortWHOQOLLabel(rf.whoqol_phys_label),
+whoqol_env_overview: shortWHOQOLLabel(rf.whoqol_env_label),
+
+csi4_overview: rf.csi4_label,
+sse_overview: rf.sse_label,
+sexflex_overview: rf.sexflex_label,
+sexual_function_overview: "See profile",
+natsal_sf_overview: rf.natsal_sf_label,
+natsal_sw_overview: rf.natsal_sw_label,
+
+    ai_summary: aiSummary,
+
+    // raw fields if needed in the template
+    attachment_anxiety_mean: finalResult.attachment.anxiety_mean,
+    attachment_avoidance_mean: finalResult.attachment.avoidance_mean,
+    phq8_score: finalResult.mental_health.depression.score,
+    gad7_score: finalResult.mental_health.anxiety.score,
+    ders16_score: finalResult.emotion_regulation.score,
+    biss_mean: finalResult.body_image.mean,
+    whoqol_phys_score: finalResult.quality_of_life.physical.score,
+    whoqol_env_score: finalResult.quality_of_life.environment.score,
+    relationship_score: finalResult.relationship.score,
+    sse_mean: finalResult.sexual_self_efficacy.mean,
+    sexflex_mean: finalResult.sexual_flexibility.mean,
+    desire_mean: finalResult.sexual_function.desire.mean,
+    arousal_mean: finalResult.sexual_function.arousal.mean,
+    orgasm_mean: finalResult.sexual_function.orgasm.mean,
+    pain_mean: finalResult.sexual_function.pain.mean,
+    sexual_satisfaction_mean: finalResult.sexual_function.satisfaction.mean,
+    natsal_sf_score: finalResult.natsal_sf.score,
+    natsal_sw_mean: finalResult.natsal_sw.mean
+  };
+}
+
+async function sendToPdfMonkey(pdfPayload) {
+  const apiKey = process.env.PDFMONKEY_API_KEY;
+  const templateId = process.env.PDFMONKEY_TEMPLATE_ID;
+
+  if (!apiKey || !templateId) {
+    return null;
+  }
+
+  const response = await fetch("https://api.pdfmonkey.io/api/v1/documents", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      document: {
+        document_template_id: templateId,
+        payload: pdfPayload,
+        status: "pending"
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`PDFMonkey error: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -455,8 +665,7 @@ export default async function handler(req, res) {
     if (!Array.isArray(fields)) {
       return res.status(400).json({ error: "No fields found" });
     }
-    
-    
+
     const relationshipStatus = getSelectedOptionText(getField(fields, FIELD_KEYS.relationship_status));
     const diagnosedConditionsBinary = getSelectedOptionText(
       getField(fields, FIELD_KEYS.diagnosed_conditions_binary)
@@ -481,38 +690,12 @@ export default async function handler(req, res) {
           : null
     };
 
-    // ---------- Core matrices ----------
+    // Attachment
     const scoredAttachment = scoreResponses(
       parseMatrixResponses(getField(fields, FIELD_KEYS.attachment)),
       RESPONSE_MAPS.ecr7
     );
 
-    const scoredPersonality = scoreResponses(
-      parseMatrixResponses(getField(fields, FIELD_KEYS.personality)),
-      RESPONSE_MAPS.bfi5
-    );
-
-    const scoredDepression = scoreResponses(
-      parseMatrixResponses(getField(fields, FIELD_KEYS.depression)),
-      RESPONSE_MAPS.phq4
-    );
-
-    const scoredAnxiety = scoreResponses(
-      parseMatrixResponses(getField(fields, FIELD_KEYS.anxiety)),
-      RESPONSE_MAPS.gad4
-    );
-
-    const scoredDERS = scoreResponses(
-      parseMatrixResponses(getField(fields, FIELD_KEYS.ders16)),
-      RESPONSE_MAPS.ders5
-    );
-
-    const scoredBISS = scoreResponses(
-      parseMatrixResponses(getField(fields, FIELD_KEYS.biss)),
-      RESPONSE_MAPS.biss6
-    );
-
-    // ---------- ECR ----------
     const attachmentMap = mapByItem(scoredAttachment);
 
     const avoidanceItems = [
@@ -553,7 +736,11 @@ export default async function handler(req, res) {
       profile: classifyECRProfile(ecrAnxietyMean, ecrAvoidanceMean)
     };
 
-    // ---------- BFI ----------
+    // Personality
+    const scoredPersonality = scoreResponses(
+      parseMatrixResponses(getField(fields, FIELD_KEYS.personality)),
+      RESPONSE_MAPS.bfi5
+    );
     const personalityMap = mapByItem(scoredPersonality);
 
     const personality = {
@@ -586,9 +773,13 @@ export default async function handler(req, res) {
     personality.openness_label = classifyBFITrait(personality.openness);
     personality.paragraph = buildBFIParagraph(personality);
 
-    // ---------- PHQ / GAD ----------
-    const depressionScore = sumScores(scoredDepression);
-    const anxietyScore = sumScores(scoredAnxiety);
+    // PHQ and GAD
+    const depressionScore = sumScores(
+      scoreResponses(parseMatrixResponses(getField(fields, FIELD_KEYS.depression)), RESPONSE_MAPS.phq4)
+    );
+    const anxietyScore = sumScores(
+      scoreResponses(parseMatrixResponses(getField(fields, FIELD_KEYS.anxiety)), RESPONSE_MAPS.gad4)
+    );
 
     const mental_health = {
       depression: {
@@ -601,7 +792,12 @@ export default async function handler(req, res) {
       }
     };
 
-    // ---------- DERS ----------
+    // DERS
+    const scoredDERS = scoreResponses(
+      parseMatrixResponses(getField(fields, FIELD_KEYS.ders16)),
+      RESPONSE_MAPS.ders5
+    );
+
     const dersReverseItems = [
       "I am clear about my feelings",
       "I pay attention to how I feel",
@@ -625,32 +821,35 @@ export default async function handler(req, res) {
       label: classifyDERS16(dersTotal)
     };
 
-    // ---------- BISS ----------
+    // BISS
+    const scoredBISS = scoreResponses(
+      parseMatrixResponses(getField(fields, FIELD_KEYS.biss)),
+      RESPONSE_MAPS.biss6
+    );
     const bissMean = meanScores(scoredBISS);
+
     const body_image = {
       mean: round2(bissMean),
       label: classifyBISS(bissMean)
     };
 
-    // ---------- WHOQOL ----------
+    // WHOQOL
     const whoqolPhysicalResponses = [
       ...parseMatrixResponses(getField(fields, FIELD_KEYS.whoqol_physical_1)),
       ...parseMatrixResponses(getField(fields, FIELD_KEYS.whoqol_physical_2))
     ];
-
     const scoredWhoqolPhysical = scoreWHOQOLItems(whoqolPhysicalResponses, [0, 1]);
     const whoqolPhysicalSum = scoredWhoqolPhysical.reduce((sum, r) => sum + r.score, 0);
-    const whoqolPhysicalScore = ((whoqolPhysicalSum - 7) / (35 - 7)) * 100;
+    const whoqolPhysicalScore = ((whoqolPhysicalSum - 7) / 28) * 100;
     const whoqolPhysicalLabel = interpretWHOQOL(whoqolPhysicalScore);
 
     const whoqolEnvironmentResponses = [
       ...parseMatrixResponses(getField(fields, FIELD_KEYS.whoqol_env_1)),
       ...parseMatrixResponses(getField(fields, FIELD_KEYS.whoqol_env_2))
     ];
-
     const scoredWhoqolEnvironment = scoreWHOQOLItems(whoqolEnvironmentResponses, []);
     const whoqolEnvironmentSum = scoredWhoqolEnvironment.reduce((sum, r) => sum + r.score, 0);
-    const whoqolEnvironmentScore = ((whoqolEnvironmentSum - 8) / (40 - 8)) * 100;
+    const whoqolEnvironmentScore = ((whoqolEnvironmentSum - 8) / 32) * 100;
     const whoqolEnvironmentLabel = interpretWHOQOL(whoqolEnvironmentScore);
 
     const quality_of_life = {
@@ -666,7 +865,7 @@ export default async function handler(req, res) {
       }
     };
 
-    // ---------- CSI ----------
+    // Relationship
     let relationship = {
       score: null,
       label: "Not applicable"
@@ -695,29 +894,31 @@ export default async function handler(req, res) {
       };
     }
 
-    // ---------- SSE ----------
+    // SSE
     const scoredSSE = scoreResponses(
       parseMatrixResponses(getField(fields, FIELD_KEYS.sse)),
       RESPONSE_MAPS.sse5
     );
     const sseMean = meanScores(scoredSSE);
+
     const sexual_self_efficacy = {
       mean: round2(sseMean),
       label: classifySimpleFive(sseMean)
     };
 
-    // ---------- SexFlex ----------
+    // SexFlex
     const scoredSexFlex = scoreResponses(
       parseMatrixResponses(getField(fields, FIELD_KEYS.sexflex)),
       RESPONSE_MAPS.sexflex4
     );
     const sexFlexMean = meanScores(scoredSexFlex);
+
     const sexual_flexibility = {
       mean: round2(sexFlexMean),
       label: classifySexFlex(sexFlexMean)
     };
 
-    // ---------- Sexual function ----------
+    // Sexual function
     const desireMean = meanScores([
       ...scoreResponses(
         parseMatrixResponses(getField(fields, FIELD_KEYS.desire_freq)),
@@ -782,7 +983,7 @@ export default async function handler(req, res) {
       satisfaction: { mean: round2(satisfactionMean), label: classifySimpleFive(satisfactionMean) }
     };
 
-    // ---------- NATSAL-SF ----------
+    // NATSAL-SF
     const natsalSfItemScores = {
       low_desire: scoreNatsalProblem(
         getField(fields, FIELD_KEYS.natsal_low_desire),
@@ -836,12 +1037,11 @@ export default async function handler(req, res) {
       items: natsalSfItemScores
     };
 
-    // ---------- NATSAL-SW ----------
+    // NATSAL-SW
     const scoredNatsalSW = scoreResponses(
       parseMatrixResponses(getField(fields, FIELD_KEYS.natsal_sw)),
       RESPONSE_MAPS.natsalSW5
     );
-
     const natsalSwMean = meanScores(scoredNatsalSW);
 
     const natsal_sw = {
@@ -849,7 +1049,54 @@ export default async function handler(req, res) {
       label: classifyNatsalSW(natsalSwMean)
     };
 
-    // ---------- Final output ----------
+    // Prompt-ready report fields
+    const report_fields = {
+      name: demographics.name,
+      gender: demographics.gender,
+      age: demographics.age,
+      sexual_orientation: demographics.sexual_orientation,
+      relationship_status: demographics.relationship_status,
+      relationship_structure: demographics.relationship_structure,
+      diagnosed_conditions_text: demographics.diagnosed_conditions_text,
+
+      ecr12_label: attachment.profile,
+      ecr12_text:
+        attachment.profile === "Secure"
+          ? "Your responses suggest a generally secure attachment pattern."
+          : attachment.profile === "Anxious"
+            ? "Your responses suggest an anxious attachment pattern, with greater sensitivity to closeness, reassurance, or loss."
+            : attachment.profile === "Avoidant"
+              ? "Your responses suggest an avoidant attachment pattern, with more discomfort around closeness or emotional dependence."
+              : attachment.profile === "Fearful"
+                ? "Your responses suggest a fearful attachment pattern, with both sensitivity to rejection and discomfort with closeness."
+                : null,
+
+      bfi10_paragraph: personality.paragraph,
+
+      phq8_label: mental_health.depression.label,
+      gad7_label: mental_health.anxiety.label,
+      ders16_label: emotion_regulation.label,
+      biss_label: body_image.label,
+
+      whoqol_phys_label: quality_of_life.physical.label,
+      whoqol_phys_text: quality_of_life.physical.text,
+      whoqol_env_label: quality_of_life.environment.label,
+      whoqol_env_text: quality_of_life.environment.text,
+
+      csi4_label: relationship.label,
+      sse_label: sexual_self_efficacy.label,
+      sexflex_label: sexual_flexibility.label,
+
+      sexual_desire_label: sexual_function.desire.label,
+      sexual_arousal_label: sexual_function.arousal.label,
+      orgasm_label: sexual_function.orgasm.label,
+      pain_label: sexual_function.pain.label,
+      sexual_satisfaction_label: sexual_function.satisfaction.label,
+
+      natsal_sf_label: natsal_sf.label,
+      natsal_sw_label: natsal_sw.label
+    };
+
     const final = {
       demographics,
       attachment,
@@ -864,54 +1111,34 @@ export default async function handler(req, res) {
       sexual_function,
       natsal_sf,
       natsal_sw,
-
-      // helpful prompt-ready fields
-      report_fields: {
-        name: demographics.name,
-        gender: demographics.gender,
-        age: demographics.age,
-        sexual_orientation: demographics.sexual_orientation,
-        relationship_status: demographics.relationship_status,
-        relationship_structure: demographics.relationship_structure,
-        diagnosed_conditions_text: demographics.diagnosed_conditions_text,
-
-        ecr12_label: attachment.profile,
-        ecr12_text:
-          attachment.profile === "Secure"
-            ? "Your responses suggest a generally secure attachment pattern."
-            : attachment.profile === "Anxious"
-              ? "Your responses suggest an anxious attachment pattern, with greater sensitivity to closeness, reassurance, or loss."
-              : attachment.profile === "Avoidant"
-                ? "Your responses suggest an avoidant attachment pattern, with more discomfort around closeness or emotional dependence."
-                : attachment.profile === "Fearful"
-                  ? "Your responses suggest a fearful attachment pattern, with both sensitivity to rejection and discomfort with closeness."
-                  : null,
-
-        bfi10_paragraph: personality.paragraph,
-
-        phq8_label: mental_health.depression.label,
-        gad7_label: mental_health.anxiety.label,
-        ders16_label: emotion_regulation.label,
-        biss_label: body_image.label,
-        whoqol_phys_label: quality_of_life.physical.label,
-        whoqol_phys_text: quality_of_life.physical.text,
-        whoqol_env_label: quality_of_life.environment.label,
-        whoqol_env_text: quality_of_life.environment.text,
-        csi4_label: relationship.label,
-        sse_label: sexual_self_efficacy.label,
-        sexflex_label: sexual_flexibility.label,
-        sexual_desire_label: sexual_function.desire.label,
-        sexual_arousal_label: sexual_function.arousal.label,
-        orgasm_label: sexual_function.orgasm.label,
-        pain_label: sexual_function.pain.label,
-        sexual_satisfaction_label: sexual_function.satisfaction.label,
-        natsal_sf_label: natsal_sf.label,
-        natsal_sw_label: natsal_sw.label
-      }
+      report_fields
     };
 
-    console.log("FINAL REPORT DEBUG:", JSON.stringify(final, null, 2));
-    return res.status(200).json(final);
+    // AI summary
+    let ai_summary = null;
+    try {
+      ai_summary = await generateAISummary(report_fields);
+    } catch (aiError) {
+      console.error("AI SUMMARY ERROR:", aiError);
+    }
+
+    // PDFMonkey
+    let pdfmonkey = null;
+    try {
+      const pdfPayload = buildPdfPayload(final, ai_summary);
+      pdfmonkey = await sendToPdfMonkey(pdfPayload);
+    } catch (pdfError) {
+      console.error("PDFMONKEY ERROR:", pdfError);
+    }
+
+    const responseBody = {
+      ...final,
+      ai_summary,
+      pdfmonkey
+    };
+
+    console.log("FINAL REPORT DEBUG:", JSON.stringify(responseBody, null, 2));
+    return res.status(200).json(responseBody);
   } catch (error) {
     console.error("HANDLER ERROR:", error);
     return res.status(500).json({
