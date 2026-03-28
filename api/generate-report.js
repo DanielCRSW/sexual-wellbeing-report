@@ -64,15 +64,23 @@ const FIELD_KEYS = {
 const getField = (fields, key) =>
   fields.find((f) => f.key === key);
 
+const getSelectedOptionText = (field) => {
+  if (!field || !field.value || !field.options) return null;
+  const selectedId = Array.isArray(field.value) ? field.value[0] : field.value;
+  const selectedOption = field.options.find((opt) => opt.id === selectedId);
+  return selectedOption ? selectedOption.text : null;
+};
+
 export default async function handler(req, res) {
   try {
     const fields = req.body.data.fields;
 
     const age = getField(fields, FIELD_KEYS.age)?.value;
-    const gender = getField(fields, FIELD_KEYS.gender)?.value;
+    const genderField = getField(fields, FIELD_KEYS.gender);
+    const gender = getSelectedOptionText(genderField);
 
     console.log("AGE:", age);
-    console.log("GENDER:", gender);
+    console.log("GENDER TEXT:", gender);
 
     return res.status(200).json({
       age,
