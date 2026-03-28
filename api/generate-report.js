@@ -60,6 +60,47 @@ const parseMatrixResponses = (field) => {
   });
 };
 
+const RESPONSE_MAPS = {
+  ecr7: {
+    "Strongly disagree": 1,
+    "2": 2,
+    "3": 3,
+    "4": 4,
+    "5": 5,
+    "6": 6,
+    "Strongly agree": 7
+  },
+  bfi5: {
+    "Strongly disagree": 1,
+    "2": 2,
+    "Neutral": 3,
+    "4": 4,
+    "Strongly agree": 5
+  },
+  phq4: {
+    "Not at all": 0,
+    "Several days": 1,
+    "More than half the days": 2,
+    "Nearly every day": 3
+  },
+  gad4: {
+    "Not at all": 0,
+    "Several days": 1,
+    "More than half the days": 2,
+    "Nearly every day": 3
+  }
+};
+
+const scoreResponses = (responses, map) => {
+  return responses.map((r) => ({
+    item: r.item,
+    response: r.response,
+    score: map[r.response] ?? null
+  }));
+};
+
+const sumScores = (responses) =>
+  responses.reduce((total, r) => total + (r.score ?? 0), 0);
 
 export default async function handler(req, res) {
   try {
@@ -77,35 +118,34 @@ export default async function handler(req, res) {
       diagnosed_conditions_text: getField(fields, FIELD_KEYS.diagnosed_conditions_text)?.value ?? null
     };
 
-       const attachmentResponses = parseMatrixResponses(
-      getField(fields, FIELD_KEYS.attachment)
-    );
+    const scoredAttachment = scoreResponses(attachmentResponses, RESPONSE_MAPS.ecr7);
+    const scoredPersonality = scoreResponses(personalityResponses, RESPONSE_MAPS.bfi5);
+    const scoredDepression = scoreResponses(depressionResponses, RESPONSE_MAPS.phq4);
+    const scoredAnxiety = scoreResponses(anxietyResponses, RESPONSE_MAPS.gad4);
 
-    const personalityResponses = parseMatrixResponses(
-      getField(fields, FIELD_KEYS.personality)
-    );
+    const attachmentTotal = sumScores(scoredAttachment);
+    const personalityTotal = sumScores(scoredPersonality);
+    const depressionTotal = sumScores(scoredDepression);
+    const anxietyTotal = sumScores(scoredAnxiety);
 
-    const depressionResponses = parseMatrixResponses(
-      getField(fields, FIELD_KEYS.depression)
-    );
-
-    const anxietyResponses = parseMatrixResponses(
-      getField(fields, FIELD_KEYS.anxiety)
-    );
-
-    console.log("BASIC OUTPUT:", JSON.stringify(output, null, 2));
-    console.log("ATTACHMENT RESPONSES:", JSON.stringify(attachmentResponses, null, 2));
-    console.log("PERSONALITY RESPONSES:", JSON.stringify(personalityResponses, null, 2));
-    console.log("DEPRESSION RESPONSES:", JSON.stringify(depressionResponses, null, 2));
-    console.log("ANXIETY RESPONSES:", JSON.stringify(anxietyResponses, null, 2));
+    console.log("TOTALS:", JSON.stringify({
+      attachmentTotal,
+      personalityTotal,
+      depressionTotal,
+      anxietyTotal
+    }, null, 2));
 
     return res.status(200).json({
       output,
-      attachmentResponses,
-      personalityResponses,
-      depressionResponses,
-      anxietyResponses
+      totals: {
+        attachmentTotal,
+        personalityTotal,
+        depressionTotal,
+        anxietyTotal
+      }
     });
+
+    
     
   } catch (error) {
     console.error(error);
