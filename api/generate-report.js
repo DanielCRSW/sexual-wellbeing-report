@@ -704,6 +704,7 @@ async function sendToPdfMonkey(pdfPayload) {
 
 async function sendEmailWithBrevo(to, name) {
   const brevoApiKey = process.env.BREVO_API_KEY;
+  console.log("BREVO KEY EXISTS:", !!brevoApiKey);
   if (!brevoApiKey) {
     throw new Error("Missing BREVO_API_KEY");
   }
@@ -1333,6 +1334,7 @@ let emailResult = null;
 try {
   if (demographics.email) {
     emailResult = await sendEmailWithBrevo(demographics.email, demographics.name);
+    console.log("EMAIL RESULT:", emailResult);
   }
 } catch (emailError) {
   console.error("EMAIL ERROR:", emailError);
