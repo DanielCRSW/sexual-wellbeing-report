@@ -1216,11 +1216,11 @@ export default async function handler(req, res) {
 
   pain_label: sexual_function.pain.label,
   sfunc_pain_text:
-    sexual_function.pain.label === "Lower"
-      ? "Your responses suggest pain or physical discomfort may be a significant concern in sexual experiences. This is important clinical information and may warrant further exploration with an appropriately qualified clinician."
-      : sexual_function.pain.label === "Moderate"
-        ? "Your responses suggest some degree of pain or discomfort may be present in sexual experiences, though not necessarily as a constant or overwhelming problem."
-        : "Your responses suggest that pain or physical discomfort is not a major concern in your current sexual functioning.",
+  sexual_function.pain.label === "Higher"
+    ? "Your responses suggest that pain or physical discomfort may be a significant concern in sexual experiences. This is important clinical information and may warrant further exploration with an appropriately qualified clinician."
+    : sexual_function.pain.label === "Moderate"
+      ? "Your responses suggest some degree of pain or discomfort may be present in sexual experiences, though not necessarily as a constant or overwhelming problem."
+      : "Your responses suggest that pain or physical discomfort is not a major concern in your current sexual functioning."
 
   sexual_satisfaction_label: sexual_function.satisfaction.label,
   sfunc_sat_text:
