@@ -702,7 +702,7 @@ async function sendToPdfMonkey(pdfPayload) {
 }
 
 
-async function sendEmailWithBrevo(to, name) {
+async function sendEmailWithBrevo(to, name, pdfUrl) {
   const brevoApiKey = process.env.BREVO_API_KEY;
   console.log("BREVO KEY EXISTS:", !!brevoApiKey);
   if (!brevoApiKey) {
@@ -728,10 +728,10 @@ async function sendEmailWithBrevo(to, name) {
       ],
       subject: "Your Sexual Wellbeing Report",
       htmlContent: `
-        <p>Hi ${name || "there"},</p>
-        <p>Your report has been generated successfully.</p>
-        <p>We will send your completed report shortly.</p>
-      `
+  <p>Hi ${name || "there"},</p>
+  <p>Your Sexual Wellbeing Report is ready.</p>
+  <p><a href="${pdfUrl}">View your report</a></p>
+`
     })
   });
 
@@ -1333,9 +1333,13 @@ try {
 let emailResult = null;
 try {
   if (demographics.email) {
-    emailResult = await sendEmailWithBrevo(demographics.email, demographics.name);
-    console.log("EMAIL RESULT:", emailResult);
-  }
+    const pdfUrl = pdfmonkey?.document?.preview_url;
+
+emailResult = await sendEmailWithBrevo(
+  demographics.email,
+  demographics.name,
+  pdfUrl
+);
 } catch (emailError) {
   console.error("EMAIL ERROR:", emailError);
 }
