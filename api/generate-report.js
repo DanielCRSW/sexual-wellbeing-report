@@ -491,6 +491,31 @@ function shortWHOQOLLabel(label) {
     .replace("Environment: ", "");
 }
 
+function shortSeverityLabel(label) {
+  if (!label) return null;
+
+  if (label.includes("Minimal")) return "Minimal";
+  if (label.includes("Mild")) return "Mild";
+  if (label.includes("Moderate")) return "Moderate";
+  if (label.includes("Moderately severe")) return "High";
+  if (label.includes("Severe")) return "High";
+  if (label.includes("Significant")) return "High";
+  if (label.includes("Generally good")) return "Low";
+  if (label.includes("Low body satisfaction")) return "Low";
+  if (label.includes("Moderate body satisfaction")) return "Moderate";
+  if (label.includes("Good body satisfaction")) return "Good";
+  if (label.includes("High body satisfaction")) return "High";
+  if (label.includes("Lower sexual wellbeing")) return "Low";
+  if (label.includes("Higher sexual wellbeing")) return "High";
+  if (label.includes("Good sexual function")) return "Low";
+  if (label.includes("Lowered sexual function")) return "Moderate";
+  if (label.includes("Difficulties in sexual function")) return "High";
+  if (label === "Lower") return "Low";
+  if (label === "Higher") return "High";
+
+  return label;
+}
+
 async function generateAISummary(reportFields) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
@@ -540,28 +565,54 @@ async function generateAISummary(reportFields) {
   return nonEmptyOrNull(content);
 }
 
+
+
 function buildPdfPayload(finalResult, aiSummary) {
   const rf = finalResult.report_fields;
 
   return {
     respondent_name: rf.name || "Assessment Participant",
+    report_date: new Date().toLocaleDateString("en-AU"),
+    diagnosed_conditions: rf.diagnosed_conditions_text,
+
     email: finalResult.demographics.email,
     gender: rf.gender,
     age: rf.age,
     sexual_orientation: rf.sexual_orientation,
     relationship_status: rf.relationship_status,
     relationship_structure: rf.relationship_structure,
-    diagnosed_conditions_text: rf.diagnosed_conditions_text,
 
+    // overview fields for summary table
+    ecr12_overview: rf.ecr12_label,
+    bfi10_overview: "See profile",
+    phq8_overview: shortSeverityLabel(rf.phq8_label),
+    gad7_overview: shortSeverityLabel(rf.gad7_label),
+    ders16_overview: shortSeverityLabel(rf.ders16_label),
+    biss_overview: shortSeverityLabel(rf.biss_label),
+    whoqol_phys_overview: shortWHOQOLLabel(rf.whoqol_phys_label),
+    whoqol_env_overview: shortWHOQOLLabel(rf.whoqol_env_label),
+
+    csi4_overview: rf.csi4_label === "Not applicable" ? "Not applicable" : shortSeverityLabel(rf.csi4_label),
+    sse_overview: shortSeverityLabel(rf.sse_label),
+    sexflex_overview: shortSeverityLabel(rf.sexflex_label),
+    sexual_function_overview: "See profile",
+    natsal_sf_overview: shortSeverityLabel(rf.natsal_sf_label),
+    natsal_sw_overview: shortSeverityLabel(rf.natsal_sw_label),
+
+    // detailed fields used throughout the report
     ecr12_label: rf.ecr12_label,
     ecr12_text: rf.ecr12_text,
 
     bfi10_paragraph: rf.bfi10_paragraph,
 
     phq8_label: rf.phq8_label,
+    phq8_text: rf.phq8_text,
     gad7_label: rf.gad7_label,
+    gad7_text: rf.gad7_text,
     ders16_label: rf.ders16_label,
+    ders16_text: rf.ders16_text,
     biss_label: rf.biss_label,
+    biss_text: rf.biss_text,
 
     whoqol_phys_label: rf.whoqol_phys_label,
     whoqol_phys_text: rf.whoqol_phys_text,
@@ -569,39 +620,32 @@ function buildPdfPayload(finalResult, aiSummary) {
     whoqol_env_text: rf.whoqol_env_text,
 
     csi4_label: rf.csi4_label,
+    csi4_text: rf.csi4_text,
 
     sse_label: rf.sse_label,
+    sse_text: rf.sse_text,
     sexflex_label: rf.sexflex_label,
+    sexflex_text: rf.sexflex_text,
 
-    sexual_desire_label: rf.sexual_desire_label,
-    sexual_arousal_label: rf.sexual_arousal_label,
-    orgasm_label: rf.orgasm_label,
-    pain_label: rf.pain_label,
-    sexual_satisfaction_label: rf.sexual_satisfaction_label,
+    sfunc_desire_label: rf.sexual_desire_label,
+    sfunc_desire_text: rf.sfunc_desire_text,
+    sfunc_arousal_label: rf.sexual_arousal_label,
+    sfunc_arousal_text: rf.sfunc_arousal_text,
+    sfunc_orgasm_label: rf.orgasm_label,
+    sfunc_orgasm_text: rf.sfunc_orgasm_text,
+    sfunc_pain_label: rf.pain_label,
+    sfunc_pain_text: rf.sfunc_pain_text,
+    sfunc_sat_label: rf.sexual_satisfaction_label,
+    sfunc_sat_text: rf.sfunc_sat_text,
 
     natsal_sf_label: rf.natsal_sf_label,
+    natsal_sf_text: rf.natsal_sf_text,
     natsal_sw_label: rf.natsal_sw_label,
-
-    // overview fields for summary table
-ecr12_overview: rf.ecr12_label,
-bfi10_overview: "See profile",
-phq8_overview: rf.phq8_label,
-gad7_overview: rf.gad7_label,
-ders16_overview: rf.ders16_label,
-biss_overview: rf.biss_label,
-whoqol_phys_overview: shortWHOQOLLabel(rf.whoqol_phys_label),
-whoqol_env_overview: shortWHOQOLLabel(rf.whoqol_env_label),
-
-csi4_overview: rf.csi4_label,
-sse_overview: rf.sse_label,
-sexflex_overview: rf.sexflex_label,
-sexual_function_overview: "See profile",
-natsal_sf_overview: rf.natsal_sf_label,
-natsal_sw_overview: rf.natsal_sw_label,
+    natsal_sw_text: rf.natsal_sw_text,
 
     ai_summary: aiSummary,
 
-    // raw fields if needed in the template
+    // optional raw values
     attachment_anxiety_mean: finalResult.attachment.anxiety_mean,
     attachment_avoidance_mean: finalResult.attachment.avoidance_mean,
     phq8_score: finalResult.mental_health.depression.score,
@@ -646,15 +690,15 @@ async function sendToPdfMonkey(pdfPayload) {
     })
   });
 
+  const text = await response.text();
+
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`PDFMonkey error: ${response.status} ${errorText}`);
+    throw new Error(`PDFMonkey error: ${response.status} ${text}`);
   }
 
-  const data = await response.json();
-  return data;
+  return JSON.parse(text);
 }
-
+  
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -1051,51 +1095,157 @@ export default async function handler(req, res) {
 
     // Prompt-ready report fields
     const report_fields = {
-      name: demographics.name,
-      gender: demographics.gender,
-      age: demographics.age,
-      sexual_orientation: demographics.sexual_orientation,
-      relationship_status: demographics.relationship_status,
-      relationship_structure: demographics.relationship_structure,
-      diagnosed_conditions_text: demographics.diagnosed_conditions_text,
+  name: demographics.name,
+  gender: demographics.gender,
+  age: demographics.age,
+  sexual_orientation: demographics.sexual_orientation,
+  relationship_status: demographics.relationship_status,
+  relationship_structure: demographics.relationship_structure,
+  diagnosed_conditions_text: demographics.diagnosed_conditions_text,
 
-      ecr12_label: attachment.profile,
-      ecr12_text:
-        attachment.profile === "Secure"
-          ? "Your responses suggest a generally secure attachment pattern."
-          : attachment.profile === "Anxious"
-            ? "Your responses suggest an anxious attachment pattern, with greater sensitivity to closeness, reassurance, or loss."
-            : attachment.profile === "Avoidant"
-              ? "Your responses suggest an avoidant attachment pattern, with more discomfort around closeness or emotional dependence."
-              : attachment.profile === "Fearful"
-                ? "Your responses suggest a fearful attachment pattern, with both sensitivity to rejection and discomfort with closeness."
-                : null,
+  ecr12_label: attachment.profile,
+  ecr12_text:
+    attachment.profile === "Secure"
+      ? "Your responses suggest a generally secure attachment pattern. You appear relatively comfortable with emotional closeness while also maintaining an appropriate sense of independence in relationships."
+      : attachment.profile === "Anxious"
+        ? "Your responses suggest an anxious attachment pattern, with greater sensitivity to closeness, reassurance, or possible loss. This can sometimes make relationships feel emotionally intense or uncertain, particularly during periods of stress or disconnection."
+        : attachment.profile === "Avoidant"
+          ? "Your responses suggest an avoidant attachment pattern, with more discomfort around closeness or emotional dependence. You may be more likely to protect yourself by pulling back, minimising vulnerability, or relying heavily on self-sufficiency."
+          : attachment.profile === "Fearful"
+            ? "Your responses suggest a fearful attachment pattern, with both sensitivity to rejection and discomfort with closeness. This can create a push-pull dynamic in relationships, where connection feels strongly wanted but also difficult to trust or sustain."
+            : null,
 
-      bfi10_paragraph: personality.paragraph,
+  bfi10_paragraph: personality.paragraph,
 
-      phq8_label: mental_health.depression.label,
-      gad7_label: mental_health.anxiety.label,
-      ders16_label: emotion_regulation.label,
-      biss_label: body_image.label,
+  phq8_label: mental_health.depression.label,
+  phq8_text:
+    mental_health.depression.label === "Minimal depressive symptoms"
+      ? "Your responses suggest that low mood is not currently a major concern. While everyone experiences fluctuations in mood, your answers do not indicate a strong pattern of depressive symptoms at this time."
+      : mental_health.depression.label === "Mild depressive symptoms"
+        ? "Your responses suggest some mild depressive symptoms may be present. This may include periods of lower motivation, reduced pleasure, or feeling flat, but not necessarily at a level that is consistently overwhelming."
+        : mental_health.depression.label === "Moderate depressive symptoms"
+          ? "Your responses suggest a moderate level of depressive symptoms. This may be affecting motivation, enjoyment, energy, or self-worth in ways that are noticeable and may be relevant to your broader wellbeing."
+          : mental_health.depression.label === "Moderately severe depressive symptoms"
+            ? "Your responses suggest a high level of depressive symptoms that may be significantly affecting daily life. Difficulties with mood, energy, concentration, or hopelessness may be especially important to consider in understanding your overall profile."
+            : "Your responses suggest a very high level of depressive symptoms, which may be having a substantial impact on daily functioning and wellbeing. This is an area that would usually warrant timely clinical attention.",
 
-      whoqol_phys_label: quality_of_life.physical.label,
-      whoqol_phys_text: quality_of_life.physical.text,
-      whoqol_env_label: quality_of_life.environment.label,
-      whoqol_env_text: quality_of_life.environment.text,
+  gad7_label: mental_health.anxiety.label,
+  gad7_text:
+    mental_health.anxiety.label === "Minimal anxiety symptoms"
+      ? "Your responses suggest that anxiety is not currently a major feature of your profile. While stress may still arise at times, your answers do not indicate a strong ongoing pattern of anxious distress."
+      : mental_health.anxiety.label === "Mild anxiety symptoms"
+        ? "Your responses suggest some mild anxiety symptoms may be present. This may involve worry, tension, or difficulty relaxing at times, but not necessarily at a level that consistently disrupts daily life."
+        : mental_health.anxiety.label === "Moderate anxiety symptoms"
+          ? "Your responses suggest a moderate level of anxiety symptoms. Worry, physical tension, restlessness, or difficulty switching off may be relevant contributors to your overall wellbeing at present."
+          : "Your responses suggest a high level of anxiety symptoms. Anxiety may be significantly affecting concentration, emotional comfort, sleep, or your ability to feel settled and present in day-to-day life.",
 
-      csi4_label: relationship.label,
-      sse_label: sexual_self_efficacy.label,
-      sexflex_label: sexual_flexibility.label,
+  ders16_label: emotion_regulation.label,
+  ders16_text:
+    emotion_regulation.label === "Generally good emotion regulation"
+      ? "Your responses suggest that you generally manage emotions effectively. This does not mean you never feel distressed, but rather that you are usually able to identify, tolerate, and respond to emotional experiences in a workable way."
+      : emotion_regulation.label === "Mild difficulties with emotion regulation"
+        ? "Your responses suggest some mild difficulty with emotion regulation. At times emotions may feel harder to understand, settle, or respond to effectively, especially under stress."
+        : emotion_regulation.label === "Moderate difficulties with emotion regulation"
+          ? "Your responses suggest a moderate level of difficulty with emotion regulation. Emotional experiences may at times feel intense, confusing, or difficult to manage, which can affect other parts of wellbeing and relationships."
+          : "Your responses suggest significant difficulties with emotion regulation. Strong emotions may be hard to understand, tolerate, or respond to effectively, and this may have important implications for coping, relationships, and sexual wellbeing.",
 
-      sexual_desire_label: sexual_function.desire.label,
-      sexual_arousal_label: sexual_function.arousal.label,
-      orgasm_label: sexual_function.orgasm.label,
-      pain_label: sexual_function.pain.label,
-      sexual_satisfaction_label: sexual_function.satisfaction.label,
+  biss_label: body_image.label,
+  biss_text:
+    body_image.label === "Low body satisfaction"
+      ? "Your responses suggest that body image may currently be a source of strain. Feeling uncomfortable, critical, or dissatisfied with your body can affect confidence, intimacy, and the ease of being present in sexual or relational experiences."
+      : body_image.label === "Moderate body satisfaction"
+        ? "Your responses suggest a mixed or moderate level of body satisfaction. There may be some aspects of your body experience that feel comfortable and others that feel more vulnerable, self-conscious, or difficult."
+        : body_image.label === "Good body satisfaction"
+          ? "Your responses suggest that body image is generally in a good place. While insecurities may still arise from time to time, your body does not appear to be a major barrier to wellbeing overall."
+          : "Your responses suggest a high level of body satisfaction. Feeling relatively comfortable and accepting of your body may be a meaningful strength within your broader wellbeing profile.",
 
-      natsal_sf_label: natsal_sf.label,
-      natsal_sw_label: natsal_sw.label
-    };
+  whoqol_phys_label: quality_of_life.physical.label,
+  whoqol_phys_text: quality_of_life.physical.text,
+  whoqol_env_label: quality_of_life.environment.label,
+  whoqol_env_text: quality_of_life.environment.text,
+
+  csi4_label: relationship.label,
+  csi4_text:
+    relationship.label === "Not applicable"
+      ? "This section is not applicable because you indicated that you are not currently in a relationship."
+      : relationship.label === "Lower"
+        ? "Your responses suggest that relationship satisfaction may currently be low. There may be meaningful strain, disconnection, or unmet needs within the relationship that are relevant to your overall wellbeing."
+        : relationship.label === "Moderate"
+          ? "Your responses suggest a mixed or moderate level of relationship satisfaction. Some aspects of the relationship may feel supportive, while others may feel less settled or more strained."
+          : "Your responses suggest a relatively positive level of relationship satisfaction. The relationship appears to provide a meaningful degree of connection, support, or stability.",
+
+  sse_label: sexual_self_efficacy.label,
+  sse_text:
+    sexual_self_efficacy.label === "Lower"
+      ? "Your responses suggest lower sexual self-efficacy, meaning you may feel less confident in navigating sexual situations, communicating needs, or responding to difficulties when they arise."
+      : sexual_self_efficacy.label === "Moderate"
+        ? "Your responses suggest a moderate level of sexual self-efficacy. You may feel confident in some situations while still feeling uncertain or less assured in others."
+        : "Your responses suggest higher sexual self-efficacy. You appear to feel relatively confident in your capacity to navigate sexual experiences, communicate needs, and respond to challenges constructively.",
+
+  sexflex_label: sexual_flexibility.label,
+  sexflex_text:
+    sexual_flexibility.label === "Low sexual flexibility"
+      ? "Your responses suggest lower sexual flexibility. Changes, disruptions, or differences in sexual experiences may feel harder to adapt to, which can sometimes increase frustration or self-doubt."
+      : sexual_flexibility.label === "Moderate sexual flexibility"
+        ? "Your responses suggest a moderate level of sexual flexibility. You may be able to adapt in some situations, while still finding certain changes or challenges more difficult to navigate."
+        : "Your responses suggest high sexual flexibility. You appear relatively able to adapt to changes, differences, or disruptions in sexual experiences without those challenges fully undermining your sense of sexual wellbeing.",
+
+  sexual_desire_label: sexual_function.desire.label,
+  sfunc_desire_text:
+    sexual_function.desire.label === "Lower"
+      ? "Your responses suggest that sexual desire may currently be lower. This can reflect many different influences, including stress, mood, physical health, relationship context, or simply where you are in life at the moment."
+      : sexual_function.desire.label === "Moderate"
+        ? "Your responses suggest a moderate level of sexual desire. Desire may be present but variable, or more dependent on context, emotional connection, or other contributing factors."
+        : "Your responses suggest relatively strong sexual desire. Desire does not appear to be a major area of difficulty at present.",
+
+  sexual_arousal_label: sexual_function.arousal.label,
+  sfunc_arousal_text:
+    sexual_function.arousal.label === "Lower"
+      ? "Your responses suggest that arousal may currently be more difficult or less reliable. This can be shaped by stress, anxiety, physical factors, relationship dynamics, and how safe or present you feel in sexual situations."
+      : sexual_function.arousal.label === "Moderate"
+        ? "Your responses suggest a moderate arousal profile. Arousal may be present but somewhat variable, inconsistent, or more dependent on context."
+        : "Your responses suggest relatively good sexual arousal functioning. Arousal does not appear to be a major concern at this time.",
+
+  orgasm_label: sexual_function.orgasm.label,
+  sfunc_orgasm_text:
+    sexual_function.orgasm.label === "Lower"
+      ? "Your responses suggest that orgasm may currently be more difficult, less satisfying, or less consistent. This can be influenced by physical, emotional, relational, and contextual factors rather than any single cause."
+      : sexual_function.orgasm.label === "Moderate"
+        ? "Your responses suggest a moderate orgasm profile. Orgasm may be achievable in some situations but less consistent, less easy, or less satisfying in others."
+        : "Your responses suggest relatively good orgasm functioning. This does not appear to be a major source of difficulty at present.",
+
+  pain_label: sexual_function.pain.label,
+  sfunc_pain_text:
+    sexual_function.pain.label === "Lower"
+      ? "Your responses suggest pain or physical discomfort may be a significant concern in sexual experiences. This is important clinical information and may warrant further exploration with an appropriately qualified clinician."
+      : sexual_function.pain.label === "Moderate"
+        ? "Your responses suggest some degree of pain or discomfort may be present in sexual experiences, though not necessarily as a constant or overwhelming problem."
+        : "Your responses suggest that pain or physical discomfort is not a major concern in your current sexual functioning.",
+
+  sexual_satisfaction_label: sexual_function.satisfaction.label,
+  sfunc_sat_text:
+    sexual_function.satisfaction.label === "Lower"
+      ? "Your responses suggest lower sexual satisfaction. This may reflect a mismatch between what you want from sexual experiences and what currently feels possible, enjoyable, or fulfilling."
+      : sexual_function.satisfaction.label === "Moderate"
+        ? "Your responses suggest a moderate level of sexual satisfaction. Some aspects of your sexual experiences may feel positive, while others may feel less settled or less fulfilling."
+        : "Your responses suggest relatively good sexual satisfaction. Sexual experiences appear to be broadly fulfilling or workable at present.",
+
+  natsal_sf_label: natsal_sf.label,
+  natsal_sf_text:
+    natsal_sf.label === "Good sexual function"
+      ? "Your responses suggest relatively good overall sexual function across the broader areas assessed. Difficulties do not appear to be prominent or distressing overall."
+      : natsal_sf.label === "Lowered sexual function"
+        ? "Your responses suggest some lowered sexual function overall. There may be a small number of difficulties that are noticeable and relevant, even if not pervasive."
+        : "Your responses suggest difficulties in sexual function overall. These concerns may be affecting your sexual wellbeing in ways that are important to acknowledge and may benefit from further support or discussion.",
+
+  natsal_sw_label: natsal_sw.label,
+  natsal_sw_text:
+    natsal_sw.label === "Lower sexual wellbeing"
+      ? "Your responses suggest lower overall sexual wellbeing. Sexual experiences or your relationship to sexuality may currently feel less comfortable, less positive, or less integrated."
+      : natsal_sw.label === "Moderate sexual wellbeing"
+        ? "Your responses suggest a moderate level of sexual wellbeing. There may be a mix of strengths and difficulties in how sexuality currently fits into your life."
+        : "Your responses suggest relatively strong overall sexual wellbeing. Sexuality appears to be a reasonably positive, manageable, or integrated part of your current wellbeing."
+};
 
     const final = {
       demographics,
