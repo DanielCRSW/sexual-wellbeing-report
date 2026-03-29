@@ -700,7 +700,39 @@ async function sendToPdfMonkey(pdfPayload) {
 
   return JSON.parse(text);
 }
+async function waitForPdfMonkeyDocument(documentId, maxAttempts = 10, delayMs = 3000) {
+  const apiKey = process.env.PDFMONKEY_API_KEY;
+  if (!apiKey) throw new Error("Missing PDFMONKEY_API_KEY");
 
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const response = await fetch(`https://api.pdfmonkey.io/api/v1/documents/${documentId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${apiKey}`
+      }
+    });
+
+    const text = await response.text();
+    if (!response.ok) {
+      throw new Error(`PDFMonkey poll error: ${response.status} ${text}`);
+    }
+
+    const data = JSON.parse(text);
+    const doc = data.document;
+
+    if (doc.status === "success" && doc.download_url) {
+      return doc;
+    }
+
+    if (doc.status === "failure") {
+      throw new Error(`PDF generation failed`);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+
+  throw new Error("PDF was not ready in time");
+}
 
 async function sendEmailWithBrevo(to, name, pdfUrl) {
   const brevoApiKey = process.env.BREVO_API_KEY;
@@ -709,6 +741,8 @@ async function sendEmailWithBrevo(to, name, pdfUrl) {
     throw new Error("Missing BREVO_API_KEY");
   }
 
+
+  
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
@@ -716,24 +750,30 @@ async function sendEmailWithBrevo(to, name, pdfUrl) {
       "api-key": brevoApiKey
     },
     body: JSON.stringify({
-      sender: {
-        name: "Centre for Relational & Sexual Wellbeing",
-        email: "info@centrersw.com"
-      },
-      to: [
-        {
-          email: to,
-          name: name || "Client"
-        }
-      ],
-      subject: "Your Sexual Wellbeing Report",
-      htmlContent: `
-  <p>Hi ${name || "there"},</p>
-  <p>Your Sexual Wellbeing Report is ready.</p>
-  <p><a href="${pdfUrl}">View your report</a></p>
-`
-    })
-  });
+  sender: {
+    name: "Centre for Relational & Sexual Wellbeing",
+    email: "info@centrersw.com"
+  },
+  to: [
+    {
+      email: to,
+      name: name || "Client"
+    }
+  ],
+  subject: "Your Sexual Wellbeing Report",
+
+  attachment: [
+    {
+      url: pdfUrl
+    }
+  ],
+
+  htmlContent: `
+    <p>Hi ${name || "there"},</p>
+    <p>Your Sexual Wellbeing Report is attached as a PDF.</p>
+  `
+})
+  }); 
 
   const text = await response.text();
 
@@ -1330,16 +1370,14 @@ try {
     }
 
 // Brevo email
-
 let emailResult = null;
 try {
-  const pdfUrl = pdfmonkey?.document?.preview_url;
-
-  if (demographics.email && pdfUrl) {
+  if (demographics.email && pdfmonkey?.document?.id) {
+    const readyDoc = await waitForPdfMonkeyDocument(pdfmonkey.document.id);
     emailResult = await sendEmailWithBrevo(
       demographics.email,
       demographics.name,
-      pdfUrl
+      readyDoc.download_url
     );
     console.log("EMAIL RESULT:", emailResult);
   }
