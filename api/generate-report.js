@@ -800,6 +800,9 @@ module.exports = async function handler(req, res) {
 
   try {
     const fields = req.body?.data?.fields;
+
+    console.log('RAW TALLY FIELDS:', JSON.stringify(fields, null, 2));
+    
     if (!Array.isArray(fields)) {
       return res.status(400).json({ error: "No fields found" });
     }
