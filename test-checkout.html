@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Test Stripe Checkout</title>
+</head>
+<body>
+  <button id="pay-button">Pay for report</button>
+
+  <script>
+    document.getElementById('pay-button').addEventListener('click', async () => {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST'
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert('Failed to create checkout session');
+        console.log(data);
+      }
+    });
+  </script>
+</body>
+</html>
