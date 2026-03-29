@@ -735,14 +735,23 @@ async function waitForPdfMonkeyDocument(documentId, maxAttempts = 10, delayMs = 
 }
 
 async function sendEmailWithBrevo(to, name, pdfUrl) {
-  const brevoApiKey = process.env.BREVO_API_KEY;
+  const brevoApiKey = process.env.BREVO_API_KEY?.trim();
   console.log("BREVO KEY EXISTS:", !!brevoApiKey);
+
   if (!brevoApiKey) {
     throw new Error("Missing BREVO_API_KEY");
   }
 
+  // Download the PDF file
+  const pdfResponse = await fetch(pdfUrl);
+  if (!pdfResponse.ok) {
+    throw new Error(`Failed to download PDF: ${pdfResponse.status}`);
+  }
 
-  
+  const pdfArrayBuffer = await pdfResponse.arrayBuffer();
+  const pdfBase64 = Buffer.from(pdfArrayBuffer).toString("base64");
+
+  // Send email with real PDF attachment
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
@@ -750,36 +759,38 @@ async function sendEmailWithBrevo(to, name, pdfUrl) {
       "api-key": brevoApiKey
     },
     body: JSON.stringify({
-  sender: {
-    name: "Centre for Relational & Sexual Wellbeing",
-    email: "info@centrersw.com"
-  },
-  to: [
-    {
-      email: to,
-      name: name || "Client"
-    }
-  ],
-  subject: "Your Sexual Wellbeing Report",
-
-  attachment: [
-    {
-      url: pdfUrl
-    }
-  ],
-
-  htmlContent: `
-    <p>Hi ${name || "there"},</p>
-    <p>Your Sexual Wellbeing Report is attached as a PDF.</p>
-  `
-})
-  }); 
+      sender: {
+        name: "Centre for Relational & Sexual Wellbeing",
+        email: "info@centrersw.com"
+      },
+      to: [
+        {
+          email: to,
+          name: name || "Client"
+        }
+      ],
+      subject: "Your Sexual Wellbeing Report",
+      attachment: [
+        {
+          name: "sexual-wellbeing-report.pdf",
+          content: pdfBase64
+        }
+      ],
+      htmlContent: `
+        <p>Hi ${name || "there"},</p>
+        <p>Your Sexual Wellbeing Report is attached as a PDF.</p>
+      `
+    })
+  });
 
   const text = await response.text();
 
   if (!response.ok) {
     throw new Error(`Brevo error: ${response.status} ${text}`);
   }
+
+  return JSON.parse(text);
+}
 
   return JSON.parse(text);
 }
