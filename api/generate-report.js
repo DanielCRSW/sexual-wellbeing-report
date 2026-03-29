@@ -841,10 +841,13 @@ const tokenField = fields.find(field => field.label === 'token');
           : null
     };
 
-    if (!demographics.token) {
-  return res.status(403).json({
-    error: "This assessment link is missing its access token. Please use the link sent to your email after purchase, or contact info@centrersw.com for help."
-  });
+    
+if (!demographics.token) {
+  return res.status(403).send(`
+    <h2>Access error</h2>
+    <p>This assessment link is incomplete.</p>
+    <p>Please use the link sent to your email after purchase, or contact info@centrersw.com.</p>
+  `);
 }
 
 const { data: tokenRow, error: tokenError } = await supabase
@@ -854,17 +857,21 @@ const { data: tokenRow, error: tokenError } = await supabase
   .single();
 
 if (tokenError || !tokenRow) {
-  return res.status(403).json({
-    error: "This assessment link is invalid or has expired. Please use the original link sent to your email, or contact info@centrersw.com for help."
-  });
+  return res.status(403).send(`
+    <h2>Invalid access link</h2>
+    <p>This assessment link is not recognised or may have expired.</p>
+    <p>Please use your original link or contact info@centrersw.com.</p>
+  `);
 }
 
 if (tokenRow.used) {
-  return res.status(403).json({
-    error: "This assessment link has already been used. If you believe this is an error, contact info@centrersw.com for help."
-  });
+  return res.status(403).send(`
+    <h2>This assessment link has already been used</h2>
+    <p>Your report has already been generated.</p>
+    <p>If you believe this is an error, please contact info@centrersw.com.</p>
+  `);
 }
-
+    
     // Attachment
     const scoredAttachment = scoreResponses(
       parseMatrixResponses(getField(fields, FIELD_KEYS.attachment)),
