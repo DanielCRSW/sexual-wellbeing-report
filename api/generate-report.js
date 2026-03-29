@@ -812,7 +812,10 @@ module.exports = async function handler(req, res) {
       getField(fields, FIELD_KEYS.diagnosed_conditions_binary)
     );
 
+const tokenField = fields.find(field => field.label === 'token');
+    
     const demographics = {
+      token: cleanText(tokenField?.value) ?? null,
       name: cleanText(getField(fields, FIELD_KEYS.name)?.value) ?? null,
       email: cleanText(getField(fields, FIELD_KEYS.email)?.value) ?? null,
       age: getField(fields, FIELD_KEYS.age)?.value ?? null,
