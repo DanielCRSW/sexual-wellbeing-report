@@ -1,5 +1,12 @@
 // api/generate-report.js
 
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
 const FIELD_KEYS = {
   // personalisation
   name: "question_vBevlX",
@@ -793,7 +800,7 @@ async function sendEmailWithBrevo(to, name, pdfUrl) {
 }
 
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -833,6 +840,24 @@ const tokenField = fields.find(field => field.label === 'token');
           ? cleanText(getField(fields, FIELD_KEYS.diagnosed_conditions_text)?.value)
           : null
     };
+
+    if (!demographics.token) {
+  return res.status(403).json({ error: "Missing token" });
+}
+
+const { data: tokenRow, error: tokenError } = await supabase
+  .from('tokens')
+  .select('*')
+  .eq('token', demographics.token)
+  .single();
+
+if (tokenError || !tokenRow) {
+  return res.status(403).json({ error: "Invalid token" });
+}
+
+if (tokenRow.used) {
+  return res.status(403).json({ error: "Token already used" });
+}
 
     // Attachment
     const scoredAttachment = scoreResponses(
@@ -1422,6 +1447,16 @@ try {
       readyDoc.download_url
     );
     console.log("EMAIL RESULT:", emailResult);
+
+await supabase
+  .from('tokens')
+  .update({ used: true })
+  .eq('token', demographics.token);
+
+console.log("Token marked as used:", demographics.token);
+
+
+    
   }
 } catch (emailError) {
   console.error("EMAIL ERROR:", emailError);
