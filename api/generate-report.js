@@ -808,8 +808,7 @@ export default async function handler(req, res) {
   try {
     const fields = req.body?.data?.fields;
 
-    console.log('RAW TALLY FIELDS:', JSON.stringify(fields, null, 2));
-    
+        
     if (!Array.isArray(fields)) {
       return res.status(400).json({ error: "No fields found" });
     }
@@ -1482,7 +1481,7 @@ console.log("Token marked as used:", demographics.token);
       emailResult
     };
 
-    console.log("FINAL REPORT DEBUG:", JSON.stringify(responseBody, null, 2));
+
     return res.status(200).json(responseBody);
   } catch (error) {
     console.error("HANDLER ERROR:", error);
