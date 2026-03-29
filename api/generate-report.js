@@ -792,9 +792,6 @@ async function sendEmailWithBrevo(to, name, pdfUrl) {
   return JSON.parse(text);
 }
 
-  return JSON.parse(text);
-}
-
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
