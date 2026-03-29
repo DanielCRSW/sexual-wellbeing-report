@@ -1,3 +1,10 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).end();
@@ -13,7 +20,24 @@ export default async function handler(req, res) {
 
     console.log('Payment successful for:', email);
 
-    const tallyLink = 'https://tally.so/r/xXQae5';
+    const token = Math.random().toString(36).substring(2, 10);
+
+    const { error } = await supabase.from('tokens').insert([
+      {
+        token,
+        email,
+        used: false
+      }
+    ]);
+
+    if (error) {
+      console.error('Supabase insert error:', error);
+      return res.status(500).json({ error: 'Failed to save token' });
+    }
+
+    console.log('Token saved:', token);
+
+    const tallyLink = `https://tally.so/r/xXQae5?token=${token}`;
 
     const brevoResponse = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
