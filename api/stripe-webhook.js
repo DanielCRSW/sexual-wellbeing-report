@@ -14,11 +14,17 @@ export default async function handler(req, res) {
 
   console.log('Stripe event received:', event.type);
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const email = session.customer_details?.email;
+ if (event.type === 'checkout.session.completed') {
+  const session = event.data.object;
 
-    console.log('Payment successful for:', email);
+  if (session.metadata?.product !== 'sexual_wellbeing_report') {
+    console.log('Ignoring unrelated payment');
+    return res.status(200).json({ ignored: true });
+  }
+
+  const email = session.customer_details?.email;
+
+  console.log('Payment successful for:', email);
 
     const token = Math.random().toString(36).substring(2, 10);
 
