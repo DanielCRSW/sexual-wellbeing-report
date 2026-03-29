@@ -842,7 +842,9 @@ const tokenField = fields.find(field => field.label === 'token');
     };
 
     if (!demographics.token) {
-  return res.status(403).json({ error: "Missing token" });
+  return res.status(403).json({
+    error: "This assessment link is missing its access token. Please use the link sent to your email after purchase, or contact info@centrersw.com for help."
+  });
 }
 
 const { data: tokenRow, error: tokenError } = await supabase
@@ -852,11 +854,15 @@ const { data: tokenRow, error: tokenError } = await supabase
   .single();
 
 if (tokenError || !tokenRow) {
-  return res.status(403).json({ error: "Invalid token" });
+  return res.status(403).json({
+    error: "This assessment link is invalid or has expired. Please use the original link sent to your email, or contact info@centrersw.com for help."
+  });
 }
 
 if (tokenRow.used) {
-  return res.status(403).json({ error: "Token already used" });
+  return res.status(403).json({
+    error: "This assessment link has already been used. If you believe this is an error, contact info@centrersw.com for help."
+  });
 }
 
     // Attachment
