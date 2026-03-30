@@ -646,7 +646,7 @@ async function generateAISummary(reportFields) {
     "You weave findings together into a coherent, human narrative.",
     "Write exactly 3 to 4 paragraphs in plain prose only.",
     "Begin by first providing a summary of the information related to the broad psychological factors. Then move onto integrating the specific sexual wellbeing measures. Finish by providing a summary of the key factors that are likely positively influencing and then negatively influencing their sexual wellbeing.",
-    "Do not use headings, bullet points, apostrophes, or quotation marks.",
+    "You can use headings to appropriatey chunk the paragraphhs but no bullet points, apostrophes, or quotation marks.",
     "Do not mention any score numbers.",
     "Do not invent details not present in the input.",
     "Where results are mixed, reflect that nuance clearly.",
