@@ -500,6 +500,14 @@ function barPctNatsalSW(label) {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Returns the CSS class strings for a bar and its badge based on percentage and part.
+// part: 'p1' (cyan) or 'p2' (pink). pct < 50 always gets concern (yellow).
+function barClasses(pct, part) {
+  if (pct == null) return { bar: 'gb-na', badge: 'badge-na' };
+  if (pct >= 50) return { bar: `gb-good-${part}`, badge: `badge-good-${part}` };
+  return { bar: 'gb-concern', badge: 'badge-concern' };
+}
+
 function mapByItem(scoredResponses) {
   const out = {};
   for (const row of scoredResponses) out[row.item] = row.score;
@@ -636,7 +644,8 @@ async function generateAISummary(reportFields) {
     "You never pathologise, shame, or overstate certainty.",
     "You do not list raw scores or rely on heavy clinical jargon.",
     "You weave findings together into a coherent, human narrative.",
-    "Write exactly 2 to 3 paragraphs in plain prose only.",
+    "Write exactly 3 to 4 paragraphs in plain prose only.",
+    "Begin by first providing a summary of the information related to the broad psychological factors. Then move onto integrating the specific sexual wellbeing measures. Finish by providing a summary of the key factors that are likely positively influencing and then negatively influencing their sexual wellbeing.",
     "Do not use headings, bullet points, apostrophes, or quotation marks.",
     "Do not mention any score numbers.",
     "Do not invent details not present in the input.",
@@ -711,28 +720,79 @@ function buildPdfPayload(finalResult, aiSummary) {
     natsal_sf_overview: shortSeverityLabel(rf.natsal_sf_label),
     natsal_sw_overview: shortSeverityLabel(rf.natsal_sw_label),
 
-    // ── Bar chart percentage values ──────────────────────────────────────────
-    // These drive bar widths and colour logic (>= 50 = strength, < 50 = concern)
-    // in the PDFMonkey template. Inverted scales (pain, natsal_sf) are already
-    // flipped so "more bar = better" is always true.
-    ecr12_bar_pct:          barPctECR(rf.ecr12_label),
-    phq8_bar_pct:           barPctPHQ8(finalResult.mental_health.depression.score),
-    gad7_bar_pct:           barPctGAD7(finalResult.mental_health.anxiety.score),
-    ders16_bar_pct:         barPctDERS16(finalResult.emotion_regulation.score),
-    biss_bar_pct:           barPctBISS(finalResult.body_image.mean),
-    whoqol_phys_bar_pct:    barPctWHOQOL(whoqolPhysRaw),
-    whoqol_env_bar_pct:     barPctWHOQOL(whoqolEnvRaw),
-    csi4_bar_pct:           rf.csi4_label === "Not applicable" ? null : barPctSimpleFive(rf.csi4_label),
-    csi4_not_applicable:    rf.csi4_label === "Not applicable",
-    sse_bar_pct:            barPctSimpleFive(rf.sse_label),
-    sexflex_bar_pct:        barPctSexFlex(rf.sexflex_label),
-    sfunc_desire_bar_pct:   barPctSimpleFive(rf.sexual_desire_label),
-    sfunc_arousal_bar_pct:  barPctSimpleFive(rf.sexual_arousal_label),
-    sfunc_orgasm_bar_pct:   barPctSimpleFive(rf.orgasm_label),
-    sfunc_pain_bar_pct:     barPctPain(rf.pain_label),
-    sfunc_sat_bar_pct:      barPctSimpleFive(rf.satisfaction_label),
-    natsal_sf_bar_pct:      barPctNatsalSF(rf.natsal_sf_label),
-    natsal_sw_bar_pct:      barPctNatsalSW(rf.natsal_sw_label),
+    // ── Bar chart percentage values + CSS class names ────────────────────────
+    // _bar_pct drives the bar width. _bar_class and _badge_class are passed
+    // directly into the template so no Handlebars logic helpers are needed.
+    // Part 1 scales use 'p1' (cyan), Part 2 scales use 'p2' (pink).
+    ecr12_bar_pct:              barPctECR(rf.ecr12_label),
+    ecr12_bar_class:            barClasses(barPctECR(rf.ecr12_label), 'p1').bar,
+    ecr12_badge_class:          barClasses(barPctECR(rf.ecr12_label), 'p1').badge,
+
+    phq8_bar_pct:               barPctPHQ8(finalResult.mental_health.depression.score),
+    phq8_bar_class:             barClasses(barPctPHQ8(finalResult.mental_health.depression.score), 'p1').bar,
+    phq8_badge_class:           barClasses(barPctPHQ8(finalResult.mental_health.depression.score), 'p1').badge,
+
+    gad7_bar_pct:               barPctGAD7(finalResult.mental_health.anxiety.score),
+    gad7_bar_class:             barClasses(barPctGAD7(finalResult.mental_health.anxiety.score), 'p1').bar,
+    gad7_badge_class:           barClasses(barPctGAD7(finalResult.mental_health.anxiety.score), 'p1').badge,
+
+    ders16_bar_pct:             barPctDERS16(finalResult.emotion_regulation.score),
+    ders16_bar_class:           barClasses(barPctDERS16(finalResult.emotion_regulation.score), 'p1').bar,
+    ders16_badge_class:         barClasses(barPctDERS16(finalResult.emotion_regulation.score), 'p1').badge,
+
+    biss_bar_pct:               barPctBISS(finalResult.body_image.mean),
+    biss_bar_class:             barClasses(barPctBISS(finalResult.body_image.mean), 'p1').bar,
+    biss_badge_class:           barClasses(barPctBISS(finalResult.body_image.mean), 'p1').badge,
+
+    whoqol_phys_bar_pct:        barPctWHOQOL(whoqolPhysRaw),
+    whoqol_phys_bar_class:      barClasses(barPctWHOQOL(whoqolPhysRaw), 'p1').bar,
+    whoqol_phys_badge_class:    barClasses(barPctWHOQOL(whoqolPhysRaw), 'p1').badge,
+
+    whoqol_env_bar_pct:         barPctWHOQOL(whoqolEnvRaw),
+    whoqol_env_bar_class:       barClasses(barPctWHOQOL(whoqolEnvRaw), 'p1').bar,
+    whoqol_env_badge_class:     barClasses(barPctWHOQOL(whoqolEnvRaw), 'p1').badge,
+
+    // Relationship — special case: not applicable gets a full-width greyed bar
+    csi4_bar_pct:               rf.csi4_label === 'Not applicable' ? 100 : barPctSimpleFive(rf.csi4_label),
+    csi4_bar_class:             rf.csi4_label === 'Not applicable' ? 'gb-na' : barClasses(barPctSimpleFive(rf.csi4_label), 'p2').bar,
+    csi4_badge_class:           rf.csi4_label === 'Not applicable' ? 'badge-na' : barClasses(barPctSimpleFive(rf.csi4_label), 'p2').badge,
+    csi4_bar_style:             rf.csi4_label === 'Not applicable' ? 'opacity:0.4;' : '',
+
+    sse_bar_pct:                barPctSimpleFive(rf.sse_label),
+    sse_bar_class:              barClasses(barPctSimpleFive(rf.sse_label), 'p2').bar,
+    sse_badge_class:            barClasses(barPctSimpleFive(rf.sse_label), 'p2').badge,
+
+    sexflex_bar_pct:            barPctSexFlex(rf.sexflex_label),
+    sexflex_bar_class:          barClasses(barPctSexFlex(rf.sexflex_label), 'p2').bar,
+    sexflex_badge_class:        barClasses(barPctSexFlex(rf.sexflex_label), 'p2').badge,
+
+    sfunc_desire_bar_pct:       barPctSimpleFive(rf.sexual_desire_label),
+    sfunc_desire_bar_class:     barClasses(barPctSimpleFive(rf.sexual_desire_label), 'p2').bar,
+    sfunc_desire_badge_class:   barClasses(barPctSimpleFive(rf.sexual_desire_label), 'p2').badge,
+
+    sfunc_arousal_bar_pct:      barPctSimpleFive(rf.sexual_arousal_label),
+    sfunc_arousal_bar_class:    barClasses(barPctSimpleFive(rf.sexual_arousal_label), 'p2').bar,
+    sfunc_arousal_badge_class:  barClasses(barPctSimpleFive(rf.sexual_arousal_label), 'p2').badge,
+
+    sfunc_orgasm_bar_pct:       barPctSimpleFive(rf.orgasm_label),
+    sfunc_orgasm_bar_class:     barClasses(barPctSimpleFive(rf.orgasm_label), 'p2').bar,
+    sfunc_orgasm_badge_class:   barClasses(barPctSimpleFive(rf.orgasm_label), 'p2').badge,
+
+    sfunc_pain_bar_pct:         barPctPain(rf.pain_label),
+    sfunc_pain_bar_class:       barClasses(barPctPain(rf.pain_label), 'p2').bar,
+    sfunc_pain_badge_class:     barClasses(barPctPain(rf.pain_label), 'p2').badge,
+
+    sfunc_sat_bar_pct:          barPctSimpleFive(rf.satisfaction_label),
+    sfunc_sat_bar_class:        barClasses(barPctSimpleFive(rf.satisfaction_label), 'p2').bar,
+    sfunc_sat_badge_class:      barClasses(barPctSimpleFive(rf.satisfaction_label), 'p2').badge,
+
+    natsal_sf_bar_pct:          barPctNatsalSF(rf.natsal_sf_label),
+    natsal_sf_bar_class:        barClasses(barPctNatsalSF(rf.natsal_sf_label), 'p2').bar,
+    natsal_sf_badge_class:      barClasses(barPctNatsalSF(rf.natsal_sf_label), 'p2').badge,
+
+    natsal_sw_bar_pct:          barPctNatsalSW(rf.natsal_sw_label),
+    natsal_sw_bar_class:        barClasses(barPctNatsalSW(rf.natsal_sw_label), 'p2').bar,
+    natsal_sw_badge_class:      barClasses(barPctNatsalSW(rf.natsal_sw_label), 'p2').badge,
     // ────────────────────────────────────────────────────────────────────────
 
     // detailed fields used throughout the report
