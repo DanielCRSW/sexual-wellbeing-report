@@ -85,20 +85,20 @@ const FIELD_KEYS = {
 
 const RESPONSE_MAPS = {
   ecr7: {
-    "Strongly disagree": 1,
+    "Strongly Disagree": 1,
     "2": 2,
     "3": 3,
     "4": 4,
     "5": 5,
     "6": 6,
-    "Strongly agree": 7
+    "Strongly Agree": 7
   },
   bfi5: {
-    "Strongly disagree": 1,
+    "Strongly Disagree": 1,
     "2": 2,
     "Neutral": 3,
     "4": 4,
-    "Strongly agree": 5
+    "Strongly Agree": 5
   },
   phq4: {
     "Not at all": 0,
@@ -120,12 +120,12 @@ const RESPONSE_MAPS = {
     "Almost always": 5
   },
   biss6: {
-    "Very dissatisfied": 1,
+    "Very Dissatisfied": 1,
     "2": 2,
     "3": 3,
     "4": 4,
     "5": 5,
-    "Very satisfied": 6
+    "Very Satisfied": 6
   },
   sse5: {
     "Not at all confident": 1,
@@ -192,11 +192,11 @@ const RESPONSE_MAPS = {
     "Did not apply": null
   },
   natsalSW5: {
-    "Strongly disagree": 1,
+    "Strongly Disagree": 1,
     "2": 2,
     "Neither agree nor disagree": 3,
     "4": 4,
-    "Strongly agree": 5
+    "Strongly Agree": 5
   },
   csiHappy6: {
     "Extremely unhappy": 1,
@@ -215,13 +215,13 @@ const RESPONSE_MAPS = {
     "Always": 6
   },
   csiAgree7: {
-    "Strongly disagree": 1,
+    "Strongly Disagree": 1,
     "Disagree": 2,
     "Somewhat disagree": 3,
     "Neither agree nor disagree": 4,
     "Somewhat agree": 5,
     "Agree": 6,
-    "Strongly agree": 7
+    "Strongly Agree": 7
   },
   whoqol5: {
     "Not at all": 1,
@@ -229,27 +229,35 @@ const RESPONSE_MAPS = {
     "Moderately": 3,
     "Mostly": 4,
     "Completely": 5,
-    "Very dissatisfied": 1,
+    "Very Dissatisfied": 1,
     "Dissatisfied": 2,
     "Neither satisfied nor dissatisfied": 3,
     "Satisfied": 4,
-    "Very satisfied": 5
+    "Very Satisfied": 5
   }
 };
 
 const WHOQOL_TEXT = {
   physical: {
-    Poor: "Your responses suggest your physical health is significantly affecting your quality of life. Pain, low energy, sleep difficulties, or reduced day-to-day functioning may be having a meaningful impact.",
-    Fair: "Your responses suggest your physical health is having a moderate impact on your quality of life. Some difficulties may be noticeable at times, even if they are not overwhelming.",
-    Good: "Your responses suggest your physical health is generally good and not significantly interfering with daily life. Physical concerns do not appear to be creating major limitations most days.",
-    "Very Good": "Your responses suggest your physical health is a strength in your overall profile. Physical concerns do not appear to be significantly affecting your day-to-day functioning at this time."
+    Poor: "Your responses suggest your physical health is significantly affecting your quality of life. Pain, fatigue, sleep difficulties, or reduced mobility may be placing a considerable strain on your day-to-day functioning. These kinds of physical challenges can make even routine tasks feel effortful, and over time they can affect mood, relationships, and overall wellbeing. It is worth speaking with a healthcare professional if you have not already done so, as there may be support available to help manage these difficulties. Understanding the physical dimension of your wellbeing is an important first step toward making meaningful change.",
+
+    Fair: "Your responses suggest your physical health is having a moderate impact on your quality of life. You may notice some physical limitations or discomfort on a regular basis, even if they do not feel overwhelming all of the time. These concerns can still quietly affect your energy levels, motivation, sleep, or ability to engage fully in activities you value. It may be worth monitoring how your physical health fluctuates and considering whether additional support or lifestyle adjustments could help. Small, consistent changes to sleep, movement, or medical care can sometimes make a meaningful difference over time.",
+
+    Good: "Your responses suggest your physical health is generally good and not significantly interfering with daily life. While occasional physical concerns may arise, they do not appear to be creating major or consistent limitations for you at this time. This is a positive foundation, as good physical health supports energy, mood, and the capacity to engage in meaningful activities and relationships. Maintaining this through regular movement, adequate rest, and preventative healthcare can help sustain your quality of life over the long term. It is still worth staying attentive to any changes, as physical health can shift gradually before it becomes more noticeable.",
+
+    "Very Good": "Your responses suggest your physical health is a genuine strength in your overall profile. You appear to have good energy, functional capacity, and physical wellbeing that supports your ability to engage fully in daily life. Strong physical health provides an important foundation for emotional resilience, sexual wellbeing, and relationship satisfaction — areas that are often underestimated in their connection to the body. This is something worth actively protecting through sustainable habits around sleep, movement, nutrition, and stress management. Recognising physical health as a resource, rather than taking it for granted, can help you maintain this advantage over time."
   },
+
   environment: {
-    Poor: "Your responses suggest your environment is significantly affecting your quality of life. Factors such as safety, resources, services, or living conditions may be placing strain on wellbeing.",
-    Fair: "Your responses suggest your environment is having a moderate impact on your quality of life. Some parts of your living situation or access to resources may be creating stress or limitation.",
-    Good: "Your responses suggest your environment is generally supportive. Your living situation, access to resources, and broader environment do not appear to be creating major barriers.",
-    "Very Good": "Your responses suggest your environment is a strength in your overall profile. You appear to have good access to resources and a stable, supportive practical environment."
+    Poor: "Your responses suggest your environment is significantly affecting your quality of life. Concerns about safety, financial security, access to healthcare, housing stability, or the quality of your immediate surroundings may be placing real strain on your overall wellbeing. Environmental stressors of this kind are often underestimated, but they can have a pervasive effect on mood, stress levels, and the ability to focus on other areas of life such as relationships and intimacy. It can be difficult to address personal or relational goals when the broader context feels unstable or unsupportive. Where possible, identifying even small changes to your environment or seeking practical support may help reduce some of this burden.",
+
+    Fair: "Your responses suggest your environment is having a moderate impact on your quality of life. Some aspects of your living situation, access to resources, or broader circumstances may be creating intermittent stress or limitation, even if things feel manageable on the surface. Environmental pressures that are not addressed can gradually erode energy and motivation, making it harder to invest in relationships, self-care, or personal goals. It may be helpful to reflect on which specific environmental factors feel most constraining and whether any practical steps could improve them. Even modest improvements in areas like financial security, neighbourhood safety, or access to services can have a meaningful effect on day-to-day wellbeing.",
+
+    Good: "Your responses suggest your environment is generally supportive of your quality of life. Your living situation, access to resources, and broader practical circumstances do not appear to be creating significant barriers at this time. Having a stable and functional environment provides an important platform for attending to other dimensions of wellbeing, including relationships, emotional health, and sexual satisfaction. While there may still be aspects of your environment you would like to improve, these do not appear to be major sources of stress or limitation right now. Continuing to invest in the practical foundations of your life — housing, finances, community, and safety — helps sustain the conditions in which other areas of wellbeing can thrive.",
+
+    "Very Good": "Your responses suggest your environment is a genuine strength in your overall quality of life profile. You appear to have good access to resources, a stable living situation, and a broader environment that supports rather than undermines your wellbeing. This kind of environmental security is often invisible when it is working well, but it provides a critical foundation for emotional regulation, relationship quality, and the capacity to pursue meaningful goals. Feeling safe, resourced, and connected to your community creates the conditions in which personal and relational flourishing becomes possible. This is worth recognising as an asset, and where possible, protecting and building upon it over time."
   }
+
 };
 
 function getField(fields, key) {
@@ -1414,187 +1422,186 @@ export default async function handler(req, res) {
       label: classifyNatsalSW(natsalSwMean)
     };
 
-    // Prompt-ready report fields
-    const report_fields = {
-      name: demographics.name,
-      gender: demographics.gender,
-      age: demographics.age,
-      sexual_orientation: demographics.sexual_orientation,
-      relationship_status: demographics.relationship_status,
-      relationship_structure: demographics.relationship_structure,
-      diagnosed_conditions_text: demographics.diagnosed_conditions_text,
+   const report_fields = {
+  name: demographics.name,
+  gender: demographics.gender,
+  age: demographics.age,
+  sexual_orientation: demographics.sexual_orientation,
+  relationship_status: demographics.relationship_status,
+  relationship_structure: demographics.relationship_structure,
+  diagnosed_conditions_text: demographics.diagnosed_conditions_text,
 
-      ecr12_label: attachment.profile,
-      ecr12_text:
-        attachment.profile === "Secure"
-          ? "Your responses suggest a generally secure attachment pattern. You appear relatively comfortable with emotional closeness while also maintaining an appropriate sense of independence in relationships."
-          : attachment.profile === "Anxious"
-            ? "Your responses suggest an anxious attachment pattern, with greater sensitivity to closeness, reassurance, or possible loss. This can sometimes make relationships feel emotionally intense or uncertain, particularly during periods of stress or disconnection."
-            : attachment.profile === "Avoidant"
-              ? "Your responses suggest an avoidant attachment pattern, with more discomfort around closeness or emotional dependence. You may be more likely to protect yourself by pulling back, minimising vulnerability, or relying heavily on self-sufficiency."
-              : attachment.profile === "Fearful"
-                ? "Your responses suggest a fearful attachment pattern, with both sensitivity to rejection and discomfort with closeness. This can create a push-pull dynamic in relationships, where connection feels strongly wanted but also difficult to trust or sustain."
-                : null,
+  ecr12_label: attachment.profile,
+  ecr12_text:
+    attachment.profile === "Secure"
+      ? "Your responses suggest a generally secure attachment pattern. You appear relatively comfortable with emotional closeness while also maintaining an appropriate sense of independence in relationships. People with secure attachment tend to find it easier to trust others, communicate needs openly, and recover from relational difficulties without becoming overwhelmed. This is a meaningful strength, as secure attachment is associated with greater relationship satisfaction, better emotional regulation, and more positive sexual wellbeing overall."
+      : attachment.profile === "Anxious"
+        ? "Your responses suggest an anxious attachment pattern, with greater sensitivity to closeness, reassurance, or possible loss. This can sometimes make relationships feel emotionally intense or uncertain, particularly during periods of stress or disconnection. You may find yourself seeking more reassurance than others seem to offer, or feeling unsettled when a partner seems distant or less engaged. These patterns often develop early in life and are not a reflection of weakness — they reflect how you learned to navigate closeness. Understanding your attachment style can be a useful starting point for building more security in relationships over time."
+        : attachment.profile === "Avoidant"
+          ? "Your responses suggest an avoidant attachment pattern, with more discomfort around closeness or emotional dependence. You may be more likely to protect yourself by pulling back, minimising vulnerability, or relying heavily on self-sufficiency when relationships feel demanding. While this can offer a sense of control or safety, it may also create distance in intimate relationships or make it harder to ask for support when you need it. Avoidant patterns often develop as a response to early experiences where closeness felt unreliable or unsafe. Recognising this pattern is a valuable step toward understanding how it may be shaping your current relationships and sexual experiences."
+          : attachment.profile === "Fearful"
+            ? "Your responses suggest a fearful attachment pattern, with both sensitivity to rejection and discomfort with closeness. This can create a push-pull dynamic in relationships, where connection feels strongly wanted but also difficult to trust or sustain. You may find yourself drawn toward intimacy while simultaneously pulling back when it feels too close or too risky. This pattern can be particularly challenging in sexual and romantic relationships, where vulnerability is unavoidable. It is one of the more complex attachment profiles, and many people find it helpful to explore with a psychologist or therapist who can provide a safe space to work through these patterns."
+            : null,
 
-      bfi10_paragraph: personality.paragraph,
+  bfi10_paragraph: personality.paragraph,
 
-      phq8_label: mental_health.depression.label,
-      phq8_text:
-        mental_health.depression.label === "Minimal depressive symptoms"
-          ? "Your responses suggest that low mood is not currently a major concern. While everyone experiences fluctuations in mood, your answers do not indicate a strong pattern of depressive symptoms at this time."
-          : mental_health.depression.label === "Mild depressive symptoms"
-            ? "Your responses suggest some mild depressive symptoms may be present. This may include periods of lower motivation, reduced pleasure, or feeling flat, but not necessarily at a level that is consistently overwhelming."
-            : mental_health.depression.label === "Moderate depressive symptoms"
-              ? "Your responses suggest a moderate level of depressive symptoms. This may be affecting motivation, enjoyment, energy, or self-worth in ways that are noticeable and may be relevant to your broader wellbeing."
-              : mental_health.depression.label === "Moderately severe depressive symptoms"
-                ? "Your responses suggest a high level of depressive symptoms that may be significantly affecting daily life. Difficulties with mood, energy, concentration, or hopelessness may be especially important to consider in understanding your overall profile."
-                : mental_health.depression.label === "Severe depressive symptoms"
-                  ? "Your responses suggest a very high level of depressive symptoms, which may be having a substantial impact on daily functioning and wellbeing. This is an area that would usually warrant timely clinical attention."
-                  : null,
-
-      gad7_label: mental_health.anxiety.label,
-      gad7_text:
-        mental_health.anxiety.label === "Minimal anxiety symptoms"
-          ? "Your responses suggest that anxiety is not currently a major feature of your profile. While stress may still arise at times, your answers do not indicate a strong ongoing pattern of anxious distress."
-          : mental_health.anxiety.label === "Mild anxiety symptoms"
-            ? "Your responses suggest some mild anxiety symptoms may be present. This may involve worry, tension, or difficulty relaxing at times, but not necessarily at a level that consistently disrupts daily life."
-            : mental_health.anxiety.label === "Moderate anxiety symptoms"
-              ? "Your responses suggest a moderate level of anxiety symptoms. Worry, physical tension, restlessness, or difficulty switching off may be relevant contributors to your overall wellbeing at present."
-              : mental_health.anxiety.label === "Severe anxiety symptoms"
-                ? "Your responses suggest a high level of anxiety symptoms. Anxiety may be significantly affecting concentration, emotional comfort, sleep, or your ability to feel settled and present in day-to-day life."
-                : null,
-
-      ders16_label: emotion_regulation.label,
-      ders16_text:
-        emotion_regulation.label === "Generally good emotion regulation"
-          ? "Your responses suggest that you generally manage emotions effectively. This does not mean you never feel distressed, but rather that you are usually able to identify, tolerate, and respond to emotional experiences in a workable way."
-          : emotion_regulation.label === "Mild difficulties with emotion regulation"
-            ? "Your responses suggest some mild difficulty with emotion regulation. At times emotions may feel harder to understand, settle, or respond to effectively, especially under stress."
-            : emotion_regulation.label === "Moderate difficulties with emotion regulation"
-              ? "Your responses suggest a moderate level of difficulty with emotion regulation. Emotional experiences may at times feel intense, confusing, or difficult to manage, which can affect other parts of wellbeing and relationships."
-              : emotion_regulation.label === "Significant difficulties with emotion regulation"
-                ? "Your responses suggest significant difficulties with emotion regulation. Strong emotions may be hard to understand, tolerate, or respond to effectively, and this may have important implications for coping, relationships, and sexual wellbeing."
-                : null,
-
-      biss_label: body_image.label,
-      biss_text:
-        body_image.label === "Low body satisfaction"
-          ? "Your responses suggest that body image may currently be a source of strain. Feeling uncomfortable, critical, or dissatisfied with your body can affect confidence, intimacy, and the ease of being present in sexual or relational experiences."
-          : body_image.label === "Moderate body satisfaction"
-            ? "Your responses suggest a mixed or moderate level of body satisfaction. There may be some aspects of your body experience that feel comfortable and others that feel more vulnerable, self-conscious, or difficult."
-            : body_image.label === "Good body satisfaction"
-              ? "Your responses suggest that body image is generally in a good place. While insecurities may still arise from time to time, your body does not appear to be a major barrier to wellbeing overall."
-              : body_image.label === "High body satisfaction"
-                ? "Your responses suggest a high level of body satisfaction. Feeling relatively comfortable and accepting of your body may be a meaningful strength within your broader wellbeing profile."
-                : null,
-
-      whoqol_phys_label: quality_of_life.physical.label,
-      whoqol_phys_text: quality_of_life.physical.text,
-      whoqol_env_label: quality_of_life.environment.label,
-      whoqol_env_text: quality_of_life.environment.text,
-
-      csi4_label: relationship.label,
-      csi4_text:
-        relationship.label === "Not applicable"
-          ? "This section is not applicable because you indicated that you are not currently in a relationship."
-          : relationship.label === "Lower"
-            ? "Your responses suggest that relationship satisfaction may currently be low. There may be meaningful strain, disconnection, or unmet needs within the relationship that are relevant to your overall wellbeing."
-            : relationship.label === "Moderate"
-              ? "Your responses suggest a mixed or moderate level of relationship satisfaction. Some aspects of the relationship may feel supportive, while others may feel less settled or more strained."
-              : relationship.label === "Higher"
-                ? "Your responses suggest a relatively positive level of relationship satisfaction. The relationship appears to provide a meaningful degree of connection, support, or stability."
-                : null,
-
-      sse_label: sexual_self_efficacy.label,
-      sse_text:
-        sexual_self_efficacy.label === "Lower"
-          ? "Your responses suggest lower sexual self-efficacy, meaning you may feel less confident in navigating sexual situations, communicating needs, or responding to difficulties when they arise."
-          : sexual_self_efficacy.label === "Moderate"
-            ? "Your responses suggest a moderate level of sexual self-efficacy. You may feel confident in some situations while still feeling uncertain or less assured in others."
-            : sexual_self_efficacy.label === "Higher"
-              ? "Your responses suggest higher sexual self-efficacy. You appear to feel relatively confident in your capacity to navigate sexual experiences, communicate needs, and respond to challenges constructively."
+  phq8_label: mental_health.depression.label,
+  phq8_text:
+    mental_health.depression.label === "Minimal depressive symptoms"
+      ? "Your responses suggest that low mood is not currently a major concern. While everyone experiences fluctuations in mood, your answers do not indicate a strong pattern of depressive symptoms at this time. This is a positive sign for your overall wellbeing, as mood has a significant influence on motivation, sexual desire, relationship quality, and day-to-day functioning. Continuing to invest in the things that support your emotional health — such as connection, meaningful activity, rest, and movement — can help maintain this foundation."
+      : mental_health.depression.label === "Mild depressive symptoms"
+        ? "Your responses suggest some mild depressive symptoms may be present. This may include periods of lower motivation, reduced pleasure, or feeling flat, but not necessarily at a level that is consistently overwhelming. Even mild depression can quietly affect energy, libido, self-worth, and the quality of close relationships over time. It is worth paying attention to whether these symptoms are persistent, and considering whether lifestyle adjustments or additional support might be helpful. Catching and addressing low mood early is often more effective than waiting until it becomes more entrenched."
+        : mental_health.depression.label === "Moderate depressive symptoms"
+          ? "Your responses suggest a moderate level of depressive symptoms. This may be affecting motivation, enjoyment, energy, or self-worth in ways that are noticeable and may be relevant to your broader wellbeing. Moderate depression can have a meaningful impact on sexual desire, relationship satisfaction, and the ability to feel present and engaged in everyday life. It is worth taking these symptoms seriously and considering whether speaking with a GP or mental health professional might be a useful next step. Support is available, and many people find that even modest intervention at this level can make a significant difference."
+          : mental_health.depression.label === "Moderately severe depressive symptoms"
+            ? "Your responses suggest a high level of depressive symptoms that may be significantly affecting daily life. Difficulties with mood, energy, concentration, or hopelessness may be especially important to consider in understanding your overall profile. At this level, depression can substantially affect relationships, sexual wellbeing, work, and the ability to engage in activities that usually bring meaning or pleasure. We would encourage you to speak with a GP or mental health professional if you have not already done so, as effective support is available. You do not have to manage this alone, and seeking help is a sign of self-awareness, not weakness."
+            : mental_health.depression.label === "Severe depressive symptoms"
+              ? "Your responses suggest a very high level of depressive symptoms, which may be having a substantial impact on daily functioning and wellbeing. This is an area that would usually warrant timely clinical attention, and we would strongly encourage you to reach out to a GP, psychologist, or mental health service as soon as possible. Severe depression affects almost every domain of life, including relationships, sexual wellbeing, physical health, and the capacity to find meaning or pleasure in daily experience. Support is available and effective, and early intervention typically leads to better outcomes. Please do not hesitate to seek help — this level of distress deserves proper care and attention."
               : null,
 
-      sexflex_label: sexual_flexibility.label,
-      sexflex_text:
-        sexual_flexibility.label === "Low sexual flexibility"
-          ? "Your responses suggest lower sexual flexibility. Changes, disruptions, or differences in sexual experiences may feel harder to adapt to, which can sometimes increase frustration or self-doubt."
-          : sexual_flexibility.label === "Moderate sexual flexibility"
-            ? "Your responses suggest a moderate level of sexual flexibility. You may be able to adapt in some situations, while still finding certain changes or challenges more difficult to navigate."
-            : sexual_flexibility.label === "High sexual flexibility"
-              ? "Your responses suggest high sexual flexibility. You appear relatively able to adapt to changes, differences, or disruptions in sexual experiences without those challenges fully undermining your sense of sexual wellbeing."
-              : null,
+  gad7_label: mental_health.anxiety.label,
+  gad7_text:
+    mental_health.anxiety.label === "Minimal anxiety symptoms"
+      ? "Your responses suggest that anxiety is not currently a major feature of your profile. While stress may still arise at times, your answers do not indicate a strong ongoing pattern of anxious distress. This is a positive foundation, as lower anxiety is associated with greater ease in relationships, more consistent sexual functioning, and better overall emotional wellbeing. Maintaining habits that support a regulated nervous system — such as adequate sleep, physical activity, and time to decompress — can help sustain this."
+      : mental_health.anxiety.label === "Mild anxiety symptoms"
+        ? "Your responses suggest some mild anxiety symptoms may be present. This may involve worry, tension, or difficulty relaxing at times, but not necessarily at a level that consistently disrupts daily life. Mild anxiety is very common and can often be managed through self-awareness, lifestyle adjustments, and stress management strategies. It is worth noticing whether anxiety tends to spike in particular contexts — such as during intimacy, conflict, or uncertainty — as this can provide useful information about where targeted support might help."
+        : mental_health.anxiety.label === "Moderate anxiety symptoms"
+          ? "Your responses suggest a moderate level of anxiety symptoms. Worry, physical tension, restlessness, or difficulty switching off may be relevant contributors to your overall wellbeing at present. Anxiety at this level can affect sleep, concentration, relationship dynamics, and sexual functioning, often in ways that are not immediately obvious. It may be worth considering whether speaking with a GP or psychologist could help you develop more effective strategies for managing these symptoms. Many people find that even a short course of support significantly reduces anxiety and improves quality of life."
+          : mental_health.anxiety.label === "Severe anxiety symptoms"
+            ? "Your responses suggest a high level of anxiety symptoms. Anxiety may be significantly affecting concentration, emotional comfort, sleep, or your ability to feel settled and present in day-to-day life. At this level, anxiety can become a major barrier to intimacy, relationship satisfaction, and sexual wellbeing, as it is very difficult to be present and engaged when the nervous system is under persistent strain. We would encourage you to speak with a GP or mental health professional, as effective treatments for anxiety are well-established and widely available. Taking this step is an important investment in your overall wellbeing."
+            : null,
 
-      sexual_desire_label: sexual_function.desire.label,
-      sfunc_desire_text:
-        sexual_function.desire.label === "Lower"
-          ? "Your responses suggest that sexual desire may currently be lower. This can reflect many different influences, including stress, mood, physical health, relationship context, or simply where you are in life at the moment."
-          : sexual_function.desire.label === "Moderate"
-            ? "Your responses suggest a moderate level of sexual desire. Desire may be present but variable, or more dependent on context, emotional connection, or other contributing factors."
-            : sexual_function.desire.label === "Higher"
-              ? "Your responses suggest relatively strong sexual desire. Desire does not appear to be a major area of difficulty at present."
-              : null,
+  ders16_label: emotion_regulation.label,
+  ders16_text:
+    emotion_regulation.label === "Generally good emotion regulation"
+      ? "Your responses suggest that you generally manage emotions effectively. This does not mean you never feel distressed, but rather that you are usually able to identify, tolerate, and respond to emotional experiences in a workable way. Good emotion regulation is a significant asset in both relationships and sexual wellbeing, as it supports the ability to stay present, communicate clearly, and recover from difficulties without becoming overwhelmed. This capacity tends to strengthen over time with self-awareness and practice, and it is worth continuing to nurture."
+      : emotion_regulation.label === "Mild difficulties with emotion regulation"
+        ? "Your responses suggest some mild difficulty with emotion regulation. At times emotions may feel harder to understand, settle, or respond to effectively, especially under stress. These difficulties can occasionally spill into relationships or intimate experiences, making it harder to communicate needs or recover from conflict. Many people find that developing a greater vocabulary for their emotional experience — and building in regular opportunities for rest and reflection — helps strengthen this area over time."
+        : emotion_regulation.label === "Moderate difficulties with emotion regulation"
+          ? "Your responses suggest a moderate level of difficulty with emotion regulation. Emotional experiences may at times feel intense, confusing, or difficult to manage, which can affect other parts of wellbeing and relationships. When emotions are hard to regulate, it can become difficult to stay present during intimacy, to communicate needs clearly, or to repair relationship ruptures effectively. These patterns are very common and are often rooted in earlier experiences rather than any personal failing. Working with a psychologist on emotion regulation strategies can be genuinely transformative for both personal and relational wellbeing."
+          : emotion_regulation.label === "Significant difficulties with emotion regulation"
+            ? "Your responses suggest significant difficulties with emotion regulation. Strong emotions may be hard to understand, tolerate, or respond to effectively, and this may have important implications for coping, relationships, and sexual wellbeing. At this level, emotional dysregulation can feel exhausting and isolating, and may lead to patterns of avoidance, conflict, or shutdown that are difficult to break without support. We would encourage you to consider speaking with a psychologist or therapist, as there are well-evidenced approaches — such as Dialectical Behaviour Therapy (DBT) and Emotion-Focused Therapy — that are specifically designed to build emotional regulation skills. You deserve support in developing a more manageable and sustainable relationship with your emotional world."
+            : null,
 
-      sexual_arousal_label: sexual_function.arousal.label,
-      sfunc_arousal_text:
-        sexual_function.arousal.label === "Lower"
-          ? "Your responses suggest that arousal may currently be more difficult or less reliable. This can be shaped by stress, anxiety, physical factors, relationship dynamics, and how safe or present you feel in sexual situations."
-          : sexual_function.arousal.label === "Moderate"
-            ? "Your responses suggest a moderate arousal profile. Arousal may be present but somewhat variable, inconsistent, or more dependent on context."
-            : sexual_function.arousal.label === "Higher"
-              ? "Your responses suggest relatively good sexual arousal functioning. Arousal does not appear to be a major concern at this time."
-              : null,
+  biss_label: body_image.label,
+  biss_text:
+    body_image.label === "Low body satisfaction"
+      ? "Your responses suggest that body image may currently be a source of strain. Feeling uncomfortable, critical, or dissatisfied with your body can affect confidence, intimacy, and the ease of being present in sexual or relational experiences. Negative body image is extremely common and is shaped by a complex mix of personal history, cultural messages, and lived experience — it is not a reflection of how your body actually appears to others. When body dissatisfaction is significant, it can act as a barrier to sexual pleasure, vulnerability, and connection, often in ways that are not immediately obvious. It may be worth exploring this area with a clinician who has experience in body image, as meaningful change is possible."
+      : body_image.label === "Moderate body satisfaction"
+        ? "Your responses suggest a mixed or moderate level of body satisfaction. There may be some aspects of your body experience that feel comfortable and others that feel more vulnerable, self-conscious, or difficult. This kind of ambivalence is very common and reflects the complexity of how most people relate to their bodies, particularly in a culture that places significant pressure on appearance. It is worth noticing when and where body concerns tend to show up most — for example, during intimacy, in certain clothing, or at particular times of the month or year — as this can provide useful information about patterns worth addressing."
+        : body_image.label === "Good body satisfaction"
+          ? "Your responses suggest that body image is generally in a good place. While insecurities may still arise from time to time, your body does not appear to be a major barrier to wellbeing or intimacy overall. A reasonably positive relationship with your body supports confidence, presence during sexual experiences, and the ability to connect with a partner without significant self-consciousness getting in the way. This is a genuine asset, and it is worth continuing to nurture a compassionate and functional relationship with your body as life circumstances change."
+          : body_image.label === "High body satisfaction"
+            ? "Your responses suggest a high level of body satisfaction. Feeling relatively comfortable and accepting of your body is a meaningful strength within your broader wellbeing profile. Positive body image supports sexual confidence, ease during intimacy, and the capacity to be present and engaged rather than self-monitoring. This does not mean you feel perfect about your body at all times, but rather that you have developed a reasonably stable and accepting relationship with it — which is something many people work hard to cultivate."
+            : null,
 
-      orgasm_label: sexual_function.orgasm.label,
-      sfunc_orgasm_text:
-        sexual_function.orgasm.label === "Lower"
-          ? "Your responses suggest that orgasm may currently be more difficult, less satisfying, or less consistent. This can be influenced by physical, emotional, relational, and contextual factors rather than any single cause."
-          : sexual_function.orgasm.label === "Moderate"
-            ? "Your responses suggest a moderate orgasm profile. Orgasm may be achievable in some situations but less consistent, less easy, or less satisfying in others."
-            : sexual_function.orgasm.label === "Higher"
-              ? "Your responses suggest relatively good orgasm functioning. This does not appear to be a major source of difficulty at present."
-              : null,
+  whoqol_phys_label: quality_of_life.physical.label,
+  whoqol_phys_text: quality_of_life.physical.text,
+  whoqol_env_label: quality_of_life.environment.label,
+  whoqol_env_text: quality_of_life.environment.text,
 
-      pain_label: sexual_function.pain.label,
-      sfunc_pain_text:
-        sexual_function.pain.label === "Higher"
-          ? "Your responses suggest that pain or physical discomfort may be a significant concern in sexual experiences. This is important clinical information and may warrant further exploration with an appropriately qualified clinician."
-          : sexual_function.pain.label === "Moderate"
-            ? "Your responses suggest some degree of pain or discomfort may be present in sexual experiences, though not necessarily as a constant or overwhelming problem."
-            : sexual_function.pain.label === "Lower"
-              ? "Your responses suggest that pain or physical discomfort is not a major concern in your current sexual functioning."
-              : null,
+  csi4_label: relationship.label,
+  csi4_text:
+    relationship.label === "Not applicable"
+      ? "This section is not applicable because you indicated that you are not currently in a relationship."
+      : relationship.label === "Lower"
+        ? "Your responses suggest that relationship satisfaction may currently be low. There may be meaningful strain, disconnection, or unmet needs within the relationship that are affecting your overall wellbeing. Relationship dissatisfaction is one of the most common contributors to reduced sexual wellbeing, as it is difficult to feel desire, openness, or pleasure when the relational foundation feels unstable or unsatisfying. It can be helpful to reflect on whether these difficulties feel like a temporary rough patch or a more persistent pattern, and whether both partners are aware of and willing to address the concerns. Couples therapy or relationship counselling can be a productive space to begin working through these challenges."
+        : relationship.label === "Moderate"
+          ? "Your responses suggest a mixed or moderate level of relationship satisfaction. Some aspects of the relationship may feel supportive and positive, while others may feel less settled, less connected, or more strained. This kind of ambivalence is common in long-term relationships and does not necessarily signal a fundamental problem, but it is worth paying attention to, particularly if the less satisfying aspects are persistent or worsening. Relationships tend to thrive with intentional investment — in communication, quality time, and addressing difficulties before they become entrenched. Even small improvements in relational quality can have a meaningful flow-on effect to sexual wellbeing and overall life satisfaction."
+          : relationship.label === "Higher"
+            ? "Your responses suggest a relatively positive level of relationship satisfaction. The relationship appears to provide a meaningful degree of connection, support, and stability in your life. Relationship satisfaction is one of the most consistent predictors of sexual wellbeing and overall quality of life, so this is a genuine asset worth recognising and protecting. Continuing to invest in communication, shared experience, and mutual care tends to sustain and deepen relational satisfaction over time."
+            : null,
 
-      satisfaction_label: sexual_function.satisfaction.label,
-      sfunc_sat_text:
-        sexual_function.satisfaction.label === "Lower"
-          ? "Your responses suggest lower sexual satisfaction. This may reflect a mismatch between what you want from sexual experiences and what currently feels possible, enjoyable, or fulfilling."
-          : sexual_function.satisfaction.label === "Moderate"
-            ? "Your responses suggest a moderate level of sexual satisfaction. Some aspects of your sexual experiences may feel positive, while others may feel less settled or less fulfilling."
-            : sexual_function.satisfaction.label === "Higher"
-              ? "Your responses suggest relatively good sexual satisfaction. Sexual experiences appear to be broadly fulfilling or workable at present."
-              : null,
+  sse_label: sexual_self_efficacy.label,
+  sse_text:
+    sexual_self_efficacy.label === "Lower"
+      ? "Your responses suggest lower sexual self-efficacy, meaning you may feel less confident in navigating sexual situations, communicating needs, or responding to difficulties when they arise. Low sexual self-efficacy can make it harder to initiate, set boundaries, ask for what you want, or manage setbacks without feeling discouraged or ashamed. These feelings are very common and are often shaped by past experiences, messages received about sexuality, or a lack of opportunity to develop confidence in this area. Building sexual self-efficacy is possible and tends to improve gradually through experience, education, and sometimes working with a clinician who specialises in sexual wellbeing."
+      : sexual_self_efficacy.label === "Moderate"
+        ? "Your responses suggest a moderate level of sexual self-efficacy. You may feel confident navigating some sexual situations while still feeling uncertain, hesitant, or less assured in others. This is a common profile and often reflects the natural variability of sexual experience — confidence tends to be higher in familiar or low-pressure contexts and lower when facing new challenges or difficulties. Continuing to develop self-awareness around sexuality, and gradually building skills in communication and self-advocacy, can help strengthen this area over time."
+        : sexual_self_efficacy.label === "Higher"
+          ? "Your responses suggest higher sexual self-efficacy. You appear to feel relatively confident in your capacity to navigate sexual experiences, communicate needs, and respond to challenges constructively. Sexual self-efficacy is a meaningful protective factor — people who feel more capable and confident in sexual contexts tend to experience greater satisfaction, recover more readily from difficulties, and communicate more effectively with partners. This is a genuine strength within your sexual wellbeing profile."
+          : null,
 
-      natsal_sf_label: natsal_sf.label,
-      natsal_sf_text:
-        natsal_sf.label === "Good sexual function"
-          ? "Your responses suggest relatively good overall sexual function across the broader areas assessed. Difficulties do not appear to be prominent or distressing overall."
-          : natsal_sf.label === "Lowered sexual function"
-            ? "Your responses suggest some lowered sexual function overall. There may be a small number of difficulties that are noticeable and relevant, even if not pervasive."
-            : natsal_sf.label === "Difficulties in sexual function"
-              ? "Your responses suggest difficulties in sexual function overall. These concerns may be affecting your sexual wellbeing in ways that are important to acknowledge and may benefit from further support or discussion."
-              : null,
+  sexflex_label: sexual_flexibility.label,
+  sexflex_text:
+    sexual_flexibility.label === "Low sexual flexibility"
+      ? "Your responses suggest lower sexual flexibility. Changes, disruptions, or differences in sexual experiences may feel harder to adapt to, which can sometimes increase frustration, self-doubt, or avoidance. Sexual flexibility refers to the capacity to adjust expectations, find alternative sources of pleasure, and maintain a workable relationship with sexuality even when things do not go as hoped. When flexibility is lower, temporary difficulties can sometimes feel more permanent or more threatening than they need to. Developing a broader and more adaptable view of sexual experience is something that can be supported through psychoeducation and, where helpful, working with a sex-positive clinician."
+      : sexual_flexibility.label === "Moderate sexual flexibility"
+        ? "Your responses suggest a moderate level of sexual flexibility. You may be able to adapt and adjust in some situations, while still finding certain changes, limitations, or unexpected challenges more difficult to navigate. This is a common profile and reflects the reality that most people have areas of sexuality where they feel more or less adaptable. Building flexibility tends to involve both expanding your repertoire of what feels pleasurable or meaningful, and developing a more compassionate relationship with difficulty and imperfection in sexual experience."
+        : sexual_flexibility.label === "High sexual flexibility"
+          ? "Your responses suggest high sexual flexibility. You appear relatively able to adapt to changes, differences, or disruptions in sexual experiences without those challenges fully undermining your sense of sexual wellbeing. This is a valuable quality, as sexual experiences inevitably change across the lifespan due to health, relationships, stress, and ageing. High flexibility means you are better positioned to maintain a positive relationship with sexuality even during challenging periods, which is a meaningful strength in your overall profile."
+          : null,
 
-      natsal_sw_label: natsal_sw.label,
-      natsal_sw_text:
-        natsal_sw.label === "Lower sexual wellbeing"
-          ? "Your responses suggest lower overall sexual wellbeing. Sexual experiences or your relationship to sexuality may currently feel less comfortable, less positive, or less integrated."
-          : natsal_sw.label === "Moderate sexual wellbeing"
-            ? "Your responses suggest a moderate level of sexual wellbeing. There may be a mix of strengths and difficulties in how sexuality currently fits into your life."
-            : natsal_sw.label === "Higher sexual wellbeing"
-              ? "Your responses suggest relatively strong overall sexual wellbeing. Sexuality appears to be a reasonably positive, manageable, or integrated part of your current wellbeing."
-              : null
-    };
+  sexual_desire_label: sexual_function.desire.label,
+  sfunc_desire_text:
+    sexual_function.desire.label === "Lower"
+      ? "Your responses suggest that sexual desire may currently be lower. This can reflect many different influences, including stress, mood, physical health, relationship context, hormonal factors, or simply where you are in life at the moment. Low desire is one of the most commonly reported sexual concerns and does not necessarily indicate a permanent problem — context matters enormously. It is worth reflecting on whether desire has changed recently or has always been lower, and whether there are particular circumstances in which it tends to increase or decrease, as this information can be very useful in understanding what might help."
+      : sexual_function.desire.label === "Moderate"
+        ? "Your responses suggest a moderate level of sexual desire. Desire may be present but variable, more context-dependent, or more responsive to emotional connection, stress levels, or physical factors than you might prefer. This is a very common experience — for many people, desire is not spontaneous but rather responsive, meaning it tends to emerge in the right circumstances rather than arising on its own. Understanding the conditions under which desire tends to increase for you can be a helpful and empowering starting point."
+        : sexual_function.desire.label === "Higher"
+          ? "Your responses suggest relatively strong sexual desire. Desire does not appear to be a major area of difficulty at present, which is a positive feature of your overall sexual wellbeing profile. It is worth noting that desire exists on a spectrum and varies naturally across time, relationships, and life circumstances — but at this point in time, it appears to be a relative strength."
+          : null,
+
+  sexual_arousal_label: sexual_function.arousal.label,
+  sfunc_arousal_text:
+    sexual_function.arousal.label === "Lower"
+      ? "Your responses suggest that arousal may currently be more difficult or less reliable. This can be shaped by stress, anxiety, physical factors, relationship dynamics, medication, and how safe or present you feel in sexual situations. Arousal difficulties are very common and are rarely caused by a single factor — they usually reflect a combination of physical, psychological, and relational influences. It can be helpful to pay attention to the circumstances in which arousal feels easier or harder, as this often reveals useful patterns. If arousal difficulties are persistent or distressing, speaking with a GP or sexual health clinician is a worthwhile step."
+      : sexual_function.arousal.label === "Moderate"
+        ? "Your responses suggest a moderate arousal profile. Arousal may be present but somewhat variable, inconsistent, or more dependent on particular conditions such as emotional safety, low stress, or specific types of stimulation. This is a very common experience and does not necessarily indicate a dysfunction — arousal is highly sensitive to context and tends to fluctuate naturally. Becoming more attuned to what supports arousal for you specifically, and reducing performance pressure where possible, can make a meaningful difference."
+        : sexual_function.arousal.label === "Higher"
+          ? "Your responses suggest relatively good sexual arousal functioning. Arousal does not appear to be a major concern at this time, which is a positive indicator within your overall sexual function profile. Maintaining the conditions that support arousal — including emotional safety, manageable stress levels, and physical health — will help sustain this over time."
+          : null,
+
+  orgasm_label: sexual_function.orgasm.label,
+  sfunc_orgasm_text:
+    sexual_function.orgasm.label === "Lower"
+      ? "Your responses suggest that orgasm may currently be more difficult, less satisfying, or less consistent. This can be influenced by physical, emotional, relational, and contextual factors rather than any single cause. Orgasm difficulties are among the most commonly reported sexual concerns and are frequently connected to anxiety, distraction, insufficient stimulation, or pressure to perform or respond in a particular way. It is worth approaching this area with curiosity rather than judgement, as self-criticism and performance pressure tend to make things harder. If this is a persistent concern, speaking with a clinician who specialises in sexual health can provide tailored guidance."
+      : sexual_function.orgasm.label === "Moderate"
+        ? "Your responses suggest a moderate orgasm profile. Orgasm may be achievable in some situations but less consistent, less easy, or less satisfying in others. This kind of variability is common and often reflects the influence of context, stress, relationship quality, or the type and duration of stimulation involved. Understanding the conditions under which orgasm tends to be more or less accessible can be a useful starting point for improving this aspect of sexual experience."
+        : sexual_function.orgasm.label === "Higher"
+          ? "Your responses suggest relatively good orgasm functioning. This does not appear to be a major source of difficulty at present, which is a positive feature of your sexual function profile. Orgasm experience can still vary naturally with mood, fatigue, stress, and relational context, but overall this appears to be a relative strength in your current sexual wellbeing."
+          : null,
+
+  pain_label: sexual_function.pain.label,
+  sfunc_pain_text:
+    sexual_function.pain.label === "Higher"
+      ? "Your responses suggest that pain or physical discomfort may be a significant concern in sexual experiences. This is important information and deserves proper attention — persistent sexual pain is not something you should simply push through or accept as inevitable. Pain during sexual activity can have many causes, including physical, muscular, hormonal, and psychological factors, and it is often very treatable with the right support. We would strongly encourage you to speak with a GP, gynaecologist, pelvic floor physiotherapist, or sexual health clinician who can help identify what is contributing and what options are available."
+      : sexual_function.pain.label === "Moderate"
+        ? "Your responses suggest some degree of pain or discomfort may be present in sexual experiences, though not necessarily as a constant or overwhelming problem. Even intermittent pain during sexual activity is worth taking seriously, as it can affect desire, arousal, and the ability to be fully present and comfortable during intimacy. It is worth discussing this with a healthcare professional, as there are often effective interventions available depending on the cause."
+        : sexual_function.pain.label === "Lower"
+          ? "Your responses suggest that pain or physical discomfort is not a major concern in your current sexual functioning. This is a positive indicator, as physical comfort during sexual activity is an important foundation for pleasure, presence, and overall sexual wellbeing. It is still worth remaining attentive to any changes in this area over time, particularly in response to health changes, hormonal shifts, or new relational contexts."
+          : null,
+
+  satisfaction_label: sexual_function.satisfaction.label,
+  sfunc_sat_text:
+    sexual_function.satisfaction.label === "Lower"
+      ? "Your responses suggest lower sexual satisfaction. This may reflect a mismatch between what you want from sexual experiences and what currently feels possible, enjoyable, or fulfilling. Sexual satisfaction is shaped by a wide range of factors — including desire, connection, communication, body image, self-efficacy, and the broader relational and emotional context — so lower satisfaction is rarely due to one thing alone. Understanding which aspects of your sexual experience feel most unsatisfying can be a helpful way to identify where change might be most meaningful. This is also an area where working with a sex-positive clinician can provide tailored and effective support."
+      : sexual_function.satisfaction.label === "Moderate"
+        ? "Your responses suggest a moderate level of sexual satisfaction. Some aspects of your sexual experiences may feel positive and enjoyable, while others may feel less settled, less connected, or less fulfilling than you would like. This kind of mixed profile is common and often reflects the natural complexity of sexual experience across different periods of life. Reflecting on what tends to make sexual experiences more or less satisfying — and communicating this with a partner where relevant — can be a useful starting point for improvement."
+        : sexual_function.satisfaction.label === "Higher"
+          ? "Your responses suggest relatively good sexual satisfaction. Sexual experiences appear to be broadly fulfilling, enjoyable, or workable at present, which is a meaningful indicator of overall sexual wellbeing. Sexual satisfaction is one of the stronger predictors of relationship quality and general life satisfaction, so this is a genuine asset worth recognising and protecting through continued communication, openness, and care for the broader conditions that support it."
+          : null,
+
+  natsal_sf_label: natsal_sf.label,
+  natsal_sf_text:
+    natsal_sf.label === "Good sexual function"
+      ? "Your responses suggest relatively good overall sexual function across the broader areas assessed. Difficulties do not appear to be prominent or distressing at this time, which is a positive indicator within your sexual wellbeing profile. Good sexual function provides a foundation for pleasure, intimacy, and connection, and tends to be supported by broader factors such as emotional health, relationship quality, and physical wellbeing. Continuing to attend to these areas will help sustain this over time."
+      : natsal_sf.label === "Lowered sexual function"
+        ? "Your responses suggest some lowered sexual function overall. There may be a small number of difficulties that are noticeable and relevant, even if they do not feel pervasive or overwhelming. It is worth paying attention to these areas, as sexual function difficulties that are caught early are generally easier to address than those that have been present for a longer time. Reflecting on the specific areas where functioning feels less strong — and what tends to influence them — can be a useful starting point."
+        : natsal_sf.label === "Difficulties in sexual function"
+          ? "Your responses suggest difficulties in sexual function across a number of the areas assessed. These concerns may be affecting your sexual wellbeing in ways that are important to acknowledge, and they are likely to benefit from further support or discussion. Sexual function difficulties are extremely common and are rarely a sign of something being fundamentally wrong — they usually reflect the interplay of physical, psychological, relational, and contextual factors that can shift with the right support. Speaking with a clinician who has expertise in sexual health is a worthwhile step toward understanding what is contributing and what might help."
+          : null,
+
+  natsal_sw_label: natsal_sw.label,
+  natsal_sw_text:
+    natsal_sw.label === "Lower sexual wellbeing"
+      ? "Your responses suggest lower overall sexual wellbeing. Sexual experiences or your relationship to sexuality may currently feel less comfortable, less positive, or less integrated into your broader sense of self and wellbeing. Sexual wellbeing is a broad and multifaceted domain, and lower scores can reflect many different things — including the impact of stress, health, relationship difficulties, past experiences, or simply a period of disconnection from this part of life. It is worth approaching this area with compassion rather than judgement, and considering whether there are specific dimensions where change might feel most meaningful or possible."
+      : natsal_sw.label === "Moderate sexual wellbeing"
+        ? "Your responses suggest a moderate level of sexual wellbeing. There may be a mix of strengths and difficulties in how sexuality currently fits into your life, your relationships, and your sense of self. This kind of mixed profile is common and reflects the reality that sexual wellbeing is rarely uniformly positive or negative — it tends to vary across different areas and at different points in life. Identifying the specific areas that feel most positive, and those that feel most in need of attention, can help focus where energy and support might be best directed."
+        : natsal_sw.label === "Higher sexual wellbeing"
+          ? "Your responses suggest relatively strong overall sexual wellbeing. Sexuality appears to be a reasonably positive, manageable, and integrated part of your current life and sense of self. This is a meaningful indicator of overall health and quality of life, and reflects a combination of personal, relational, and contextual factors that are currently working in your favour. It is worth continuing to invest in the things that support this — including open communication, self-awareness, emotional health, and a compassionate relationship with your own body and sexuality."
+          : null
+};
 
     const final = {
       demographics,
