@@ -63,8 +63,8 @@ export default async function handler(req, res) {
         subject: 'Your Sexual Wellbeing Assessment — next steps',
 htmlContent: `
   
-  <p>Thank you for taking this step toward understanding your sexual wellbeing.</p>
-  <p>Your assessment is ready to complete. This is quite a comprehensive report and can take around 30 - 45 minutes to complete, so please make sure you have set some time aside before starting.</p>
+  <p>Thank you for purchasing "Your Sexual Wellbeing Assessment".</p>
+  <p>Your assessment is ready to complete by clicking the one-time link below. This is quite a comprehensive report and can take around 30 - 45 minutes to complete, so please make sure you have set some time aside before starting.</p>
   <p><a href="${tallyLink}">Begin your assessment</a></p>
   <p>Once you've finished, your personalised report will be sent to the email address provided.</p>
   <p>If you have any questions in the meantime, feel free to reach out at <a href="mailto:info@centrersw.com">info@centrersw.com</a></p>
