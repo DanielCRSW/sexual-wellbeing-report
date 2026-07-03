@@ -252,7 +252,7 @@ async function sendResultEmail({ email, category }) {
       'api-key':      process.env.BREVO_API_KEY,
     },
     body: JSON.stringify({
-      sender:      { name: 'Centre for Relational and Sexual Wellbeing', email: 'hello@centrersw.com' },
+      sender:      { name: 'Centre for Relational and Sexual Wellbeing', email: 'info@centrersw.com' },
       to:          [{ email }],
       subject:     'Your Sexual Wellbeing Snapshot results',
       htmlContent,
