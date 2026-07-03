@@ -77,14 +77,14 @@ function reverseScore(score) {
 }
 
 function classifyNatsal(mean) {
-  if (mean < 2.5)  return 'Lower';
-  if (mean <= 3.5) return 'Moderate';
+  if (mean < 3)  return 'Lower';
+  if (mean <= 4) return 'Moderate';
   return 'Higher';
 }
 
 function classifySSE(mean) {
-  if (mean < 2.5)  return 'lower';
-  if (mean <= 3.5) return 'moderate';
+  if (mean < 3)  return 'lower';
+  if (mean <= 4) return 'moderate';
   return 'higher';
 }
 
