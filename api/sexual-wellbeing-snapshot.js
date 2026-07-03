@@ -9,13 +9,7 @@ const PDF_LINKS = {
   Higher:   'https://raw.githubusercontent.com/DanielCRSW/sexual-wellbeing-report/main/CRSW_SexualWellbeing_Snapshot_Higher.pdf',
 };
 
-// ─── Tally Matrix block labels ────────────────────────────────────────────────
-// These must exactly match the "Label" you give each Matrix block in Tally.
-const MATRIX_LABEL_NATSAL = 'NATSAL-SW';
-const MATRIX_LABEL_SSE    = 'SSE';
-
-// ─── Tally non-matrix field labels ───────────────────────────────────────────
-// Must exactly match the "Label" of each individual question block in Tally.
+// ─── Tally field labels ───────────────────────────────────────────────────────
 const FIELD = {
   email:          'Email address',
   age:            'Age',
@@ -28,9 +22,10 @@ const FIELD = {
   referral:       'HowDidYouHear',
 };
 
+const MATRIX_LABEL_NATSAL = 'NATSAL-SW';
+const MATRIX_LABEL_SSE    = 'SSE';
+
 // ─── NATSAL-SW item definitions ───────────────────────────────────────────────
-// text: the exact row label used in the Tally Matrix (what respondents see)
-// reverse: whether this item is reverse-scored
 const NATSAL_ITEMS = [
   { text: 'I feel in control of my sexual thoughts and desires',                                           reverse: false },
   { text: 'I feel comfortable with my sexual identity and preferences',                                    reverse: false },
@@ -47,7 +42,6 @@ const NATSAL_ITEMS = [
   { text: 'I feel able to be "in the moment" and focused during sexual activities',                        reverse: false },
 ];
 
-// ─── SSE item definitions ─────────────────────────────────────────────────────
 const SSE_ITEMS = [
   'I feel confident communicating my sexual needs and desires to a partner',
   'I feel confident in my ability to experience sexual pleasure',
@@ -72,9 +66,7 @@ const CONFIDENCE_5 = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function reverseScore(score) {
-  return 6 - score;
-}
+function reverseScore(score) { return 6 - score; }
 
 function classifyNatsal(mean) {
   if (mean < 3)  return 'Lower';
@@ -89,36 +81,64 @@ function classifySSE(mean) {
 }
 
 /**
- * Get a field value from Tally's flat fields array by its label.
- * Used for non-matrix question types.
+ * Get a field from Tally's fields array by its label.
+ * Resolves dropdown and checkbox option IDs to their text values automatically.
+ * Tally format: { key, label, type, value, options?, rows?, columns? }
+ *
+ * Matrix fields value format: { rowId: [colId], ... }
+ * Dropdown value format:      [optionId]
+ * Checkboxes value format:    [optionId, ...]
  */
 function getField(fields, label) {
   const f = fields.find(f => f.label === label);
-  return f ? f.value : null;
+  if (!f) return null;
+
+  // Dropdown — resolve selected option ID(s) to text
+  if (f.type === 'DROPDOWN' && Array.isArray(f.value) && f.options) {
+    const texts = f.value
+      .map(id => f.options.find(o => o.id === id)?.text)
+      .filter(Boolean);
+    return texts.length === 1 ? texts[0] : texts;
+  }
+
+  // Checkboxes — resolve selected option ID(s) to text array
+  if (f.type === 'CHECKBOXES' && Array.isArray(f.value) && f.options) {
+    return f.value
+      .map(id => f.options.find(o => o.id === id)?.text)
+      .filter(Boolean);
+  }
+
+  return f.value;
 }
 
 /**
- * Get the value array from a Tally Matrix block by the block's label.
- * Tally sends Matrix responses as:
- *   { label: 'NATSAL-SW', type: 'MATRIX', value: [{ label: 'row text', value: 'Agree' }, ...] }
+ * Build a { rowText → columnText } map from a Tally Matrix field.
+ * Tally sends: value = { rowId: [colId] }, rows = [{id, text}], columns = [{id, text}]
  */
-function getMatrixRows(fields, blockLabel) {
-  const f = fields.find(f => f.label === blockLabel);
-  if (!f || !Array.isArray(f.value)) return [];
-  return f.value;
+function buildMatrixMap(matrixField) {
+  const map = {};
+  if (!matrixField || typeof matrixField.value !== 'object' || Array.isArray(matrixField.value)) return map;
+  for (const [rowId, colIds] of Object.entries(matrixField.value)) {
+    const row = matrixField.rows?.find(r => r.id === rowId);
+    const col = matrixField.columns?.find(c => c.id === colIds[0]);
+    if (row && col) map[row.text] = col.text;
+  }
+  return map;
 }
 
 // ─── Scoring ──────────────────────────────────────────────────────────────────
 
 function scoreNatsal(fields) {
-  const rows = getMatrixRows(fields, MATRIX_LABEL_NATSAL);
-  if (rows.length === 0) return { mean: null, category: null, itemsAnswered: 0 };
+  const f = fields.find(f => f.label === MATRIX_LABEL_NATSAL && f.type === 'MATRIX');
+  if (!f) return { mean: null, category: null, itemsAnswered: 0 };
 
+  const rowMap = buildMatrixMap(f);
   const scores = [];
+
   for (const item of NATSAL_ITEMS) {
-    const row = rows.find(r => r.label === item.text);
-    if (!row || !row.value) continue; // skipped (e.g. conditional items 8, 9, 13)
-    const raw = LIKERT_5[row.value];
+    const colText = rowMap[item.text];
+    if (!colText) continue;
+    const raw = LIKERT_5[colText];
     if (raw === undefined) continue;
     scores.push(item.reverse ? reverseScore(raw) : raw);
   }
@@ -133,14 +153,15 @@ function scoreNatsal(fields) {
 }
 
 function scoreSSE(fields) {
-  const rows = getMatrixRows(fields, MATRIX_LABEL_SSE);
-  if (rows.length === 0) return { mean: null, category: null };
+  const f = fields.find(f => f.label === MATRIX_LABEL_SSE && f.type === 'MATRIX');
+  if (!f) return { mean: null, category: null };
 
+  const rowMap = buildMatrixMap(f);
   const scores = SSE_ITEMS
     .map(text => {
-      const row = rows.find(r => r.label === text);
-      if (!row || !row.value) return null;
-      return CONFIDENCE_5[row.value] ?? null;
+      const colText = rowMap[text];
+      if (!colText) return null;
+      return CONFIDENCE_5[colText] ?? null;
     })
     .filter(s => s !== null);
 
@@ -162,16 +183,18 @@ async function upsertBrevoContact({ email, natsalCategory, sseCategory, demograp
     attributes: {
       NATSAL_CATEGORY: natsalCategory,
       SSE_CATEGORY:    sseCategory,
-      AGE:             demographics.age           || '',
-      GENDER:          demographics.gender         || '',
-      GENDER_DIVERSE:  demographics.genderDiverse  || '',
-      ORIENTATION:     demographics.orientation    || '',
-      RELATIONSHIP:    demographics.relationship   || '',
-      LOCATION:        demographics.location       || '',
+      AGE:             demographics.age          || '',
+      GENDER:          demographics.gender        || '',
+      GENDER_DIVERSE:  demographics.genderDiverse || '',
+      ORIENTATION:     demographics.orientation   || '',
+      RELATIONSHIP:    demographics.relationship  || '',
+      LOCATION:        demographics.location      || '',
       TOPICS:          Array.isArray(demographics.topics)
                          ? demographics.topics.join(', ')
-                         : (demographics.topics || ''),
-      REFERRAL:        demographics.referral       || '',
+                         : (demographics.topics   || ''),
+      REFERRAL:        Array.isArray(demographics.referral)
+                         ? demographics.referral.join(', ')
+                         : (demographics.referral || ''),
       LEAD_SOURCE:     'Sexual Wellbeing Snapshot',
     },
   };
@@ -186,7 +209,6 @@ async function upsertBrevoContact({ email, natsalCategory, sseCategory, demograp
     body: JSON.stringify(body),
   });
 
-  // 201 = created, 204 = updated — both are success
   if (!res.ok && res.status !== 204) {
     const text = await res.text();
     throw new Error(`Brevo contacts API error ${res.status}: ${text}`);
@@ -253,15 +275,11 @@ export default async function handler(req, res) {
   try {
     const payload = req.body;
 
-    // Tally sends: { eventId, eventType, createdAt, data: { fields: [...] } }
     if (!payload?.data?.fields) {
       return res.status(400).json({ error: 'Invalid Tally payload' });
     }
 
     const { fields } = payload.data;
-
-    // Log raw payload to verify Matrix field structure — check Vercel function logs
-    console.log('Raw fields:', JSON.stringify(fields, null, 2));
 
     // Email
     const email = getField(fields, FIELD.email);
@@ -276,6 +294,7 @@ export default async function handler(req, res) {
 
     if (!natsal.category) {
       console.error('Could not score NATSAL-SW — no valid items found');
+      console.error('Fields received:', JSON.stringify(fields.map(f => ({ label: f.label, type: f.type })), null, 2));
       return res.status(400).json({ error: 'Could not score assessment' });
     }
 
@@ -291,7 +310,6 @@ export default async function handler(req, res) {
       referral:      getField(fields, FIELD.referral),
     };
 
-    // Add/update Brevo contact, then send result email
     await upsertBrevoContact({
       email,
       natsalCategory: natsal.category,
