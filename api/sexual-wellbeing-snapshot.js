@@ -310,12 +310,17 @@ export default async function handler(req, res) {
       referral:      getField(fields, FIELD.referral),
     };
 
-    await upsertBrevoContact({
-      email,
-      natsalCategory: natsal.category,
-      sseCategory:    sse.category || '',
-      demographics,
-    });
+    // Add contact to Brevo — non-fatal if it fails (e.g. IP restriction)
+    try {
+      await upsertBrevoContact({
+        email,
+        natsalCategory: natsal.category,
+        sseCategory:    sse.category || '',
+        demographics,
+      });
+    } catch (brevoErr) {
+      console.error('Brevo contact upsert failed (non-fatal):', brevoErr.message);
+    }
 
     await sendResultEmail({ email, category: natsal.category });
 
