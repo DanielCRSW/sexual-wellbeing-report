@@ -18,7 +18,7 @@ export default async function handler(req, res) {
             product_data: {
               name: 'Sexual Wellbeing Report',
             },
-            unit_amount: 2900,
+            unit_amount: 3500,
           },
           quantity: 1,
         },
