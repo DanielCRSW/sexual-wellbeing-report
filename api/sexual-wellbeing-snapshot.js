@@ -260,10 +260,8 @@ export default async function handler(req, res) {
 
     const { fields } = payload.data;
 
-    // Log raw payload in development to verify Matrix field structure
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Raw fields:', JSON.stringify(fields, null, 2));
-    }
+    // Log raw payload to verify Matrix field structure — check Vercel function logs
+    console.log('Raw fields:', JSON.stringify(fields, null, 2));
 
     // Email
     const email = getField(fields, FIELD.email);
