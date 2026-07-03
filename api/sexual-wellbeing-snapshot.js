@@ -179,7 +179,7 @@ async function upsertBrevoContact({ email, natsalCategory, sseCategory, demograp
   const body = {
     email,
     updateEnabled: true,
-    listIds: [3], // TODO: confirm your Brevo list ID for lead magnet contacts
+    listIds: [5],
     attributes: {
       NATSAL_CATEGORY: natsalCategory,
       SSE_CATEGORY:    sseCategory,
