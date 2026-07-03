@@ -9,59 +9,66 @@ const PDF_LINKS = {
   Higher:   'https://raw.githubusercontent.com/DanielCRSW/sexual-wellbeing-report/main/CRSW_SexualWellbeing_Snapshot_Higher.pdf',
 };
 
-// ─── Tally field labels ───────────────────────────────────────────────────────
-// These must exactly match the "Label" values you set in Tally for each question.
-// Adjust if you use different names in the form builder.
+// ─── Tally Matrix block labels ────────────────────────────────────────────────
+// These must exactly match the "Label" you give each Matrix block in Tally.
+const MATRIX_LABEL_NATSAL = 'NATSAL-SW';
+const MATRIX_LABEL_SSE    = 'SSE';
+
+// ─── Tally non-matrix field labels ───────────────────────────────────────────
+// Must exactly match the "Label" of each individual question block in Tally.
 const FIELD = {
-  // Contact
   email:          'Email address',
-  // NATSAL-SW items 1–13
-  natsal_1:       'NATSAL1',
-  natsal_2:       'NATSAL2',
-  natsal_3:       'NATSAL3',
-  natsal_4:       'NATSAL4',   // reverse scored
-  natsal_5:       'NATSAL5',   // reverse scored
-  natsal_6:       'NATSAL6',   // reverse scored
-  natsal_7:       'NATSAL7',   // reverse scored
-  natsal_8:       'NATSAL8',   // reverse scored (sexually active only)
-  natsal_9:       'NATSAL9',   // reverse scored (sexually active only)
-  natsal_10:      'NATSAL10',
-  natsal_11:      'NATSAL11',
-  natsal_12:      'NATSAL12',
-  natsal_13:      'NATSAL13',  // sexually active only
-  // SSE items
-  sse_comm:       'SSE_Communication',
-  sse_pleasure:   'SSE_Pleasure',
-  // Demographics
   age:            'Age',
   gender:         'Gender',
-  gender_diverse: 'GenderDiverse',   // is gender identity different from sex assigned at birth?
+  gender_diverse: 'GenderDiverse',
   orientation:    'SexualOrientation',
   relationship:   'RelationshipStatus',
   location:       'Location',
-  // Market research
   topics:         'InterestedTopics',
   referral:       'HowDidYouHear',
 };
 
-// Likert map: text option → numeric score
+// ─── NATSAL-SW item definitions ───────────────────────────────────────────────
+// text: the exact row label used in the Tally Matrix (what respondents see)
+// reverse: whether this item is reverse-scored
+const NATSAL_ITEMS = [
+  { text: 'I feel in control of my sexual thoughts and desires',                                           reverse: false },
+  { text: 'I feel comfortable with my sexual identity and preferences',                                    reverse: false },
+  { text: 'People close to me accept my sexual identity and preferences',                                  reverse: false },
+  { text: 'Some of my sexual thoughts and desires make me feel ashamed',                                   reverse: true  },
+  { text: 'I worry about what might happen to me in my future sex life',                                   reverse: true  },
+  { text: 'In the last month, I felt upset with myself about mistakes I made in my sexual past',           reverse: true  },
+  { text: 'In the last month, I felt upset with others about things they did to me in my sexual past',    reverse: true  },
+  { text: 'I have unwanted thoughts during sexual activities',                                             reverse: true  },
+  { text: 'During sexual activities, I felt vulnerable when I did not want to be',                        reverse: true  },
+  { text: 'In the last month, I only did sexual activities that I really wanted to do',                    reverse: false },
+  { text: 'My sex life is pleasurable',                                                                    reverse: false },
+  { text: 'I have someone I can talk to openly about my sex life',                                         reverse: false },
+  { text: 'I feel able to be "in the moment" and focused during sexual activities',                        reverse: false },
+];
+
+// ─── SSE item definitions ─────────────────────────────────────────────────────
+const SSE_ITEMS = [
+  'I feel confident communicating my sexual needs and desires to a partner',
+  'I feel confident in my ability to experience sexual pleasure',
+];
+
+// ─── Scoring maps ─────────────────────────────────────────────────────────────
 const LIKERT_5 = {
-  'Strongly agree':    5,
-  'Agree':             4,
+  'Strongly agree':             5,
+  'Agree':                      4,
   'Neither agree nor disagree': 3,
-  'Disagree':          2,
-  'Strongly disagree': 1,
+  'Disagree':                   2,
+  'Strongly disagree':          1,
 };
 
 const CONFIDENCE_5 = {
-  'Completely confident':  5,
-  'Mostly confident':      4,
-  'Somewhat confident':    3,
-  'Not very confident':    2,
-  'Not at all confident':  1,
+  'Completely confident': 5,
+  'Mostly confident':     4,
+  'Somewhat confident':   3,
+  'Not very confident':   2,
+  'Not at all confident': 1,
 };
-
-const REVERSE_ITEMS = new Set(['natsal_4','natsal_5','natsal_6','natsal_7','natsal_8','natsal_9']);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -82,8 +89,8 @@ function classifySSE(mean) {
 }
 
 /**
- * Extract a field value from Tally's fields array by its label.
- * Tally sends fields as: [{ label, type, value }, ...]
+ * Get a field value from Tally's flat fields array by its label.
+ * Used for non-matrix question types.
  */
 function getField(fields, label) {
   const f = fields.find(f => f.label === label);
@@ -91,33 +98,32 @@ function getField(fields, label) {
 }
 
 /**
- * Convert a Tally Likert text response to a numeric score.
- * Returns null if the field is missing or unrecognised (e.g. skipped conditional).
+ * Get the value array from a Tally Matrix block by the block's label.
+ * Tally sends Matrix responses as:
+ *   { label: 'NATSAL-SW', type: 'MATRIX', value: [{ label: 'row text', value: 'Agree' }, ...] }
  */
-function likertScore(fields, fieldLabel, map) {
-  const val = getField(fields, fieldLabel);
-  if (!val || !(val in map)) return null;
-  return map[val];
+function getMatrixRows(fields, blockLabel) {
+  const f = fields.find(f => f.label === blockLabel);
+  if (!f || !Array.isArray(f.value)) return [];
+  return f.value;
 }
 
 // ─── Scoring ──────────────────────────────────────────────────────────────────
 
 function scoreNatsal(fields) {
-  const keys = [
-    'natsal_1','natsal_2','natsal_3','natsal_4','natsal_5','natsal_6',
-    'natsal_7','natsal_8','natsal_9','natsal_10','natsal_11','natsal_12','natsal_13',
-  ];
+  const rows = getMatrixRows(fields, MATRIX_LABEL_NATSAL);
+  if (rows.length === 0) return { mean: null, category: null, itemsAnswered: 0 };
 
   const scores = [];
-  for (const key of keys) {
-    let raw = likertScore(fields, FIELD[key], LIKERT_5);
-    if (raw === null) continue; // item was skipped (conditional items 8, 9, 13)
-    if (REVERSE_ITEMS.has(key)) raw = reverseScore(raw);
-    scores.push(raw);
+  for (const item of NATSAL_ITEMS) {
+    const row = rows.find(r => r.label === item.text);
+    if (!row || !row.value) continue; // skipped (e.g. conditional items 8, 9, 13)
+    const raw = LIKERT_5[row.value];
+    if (raw === undefined) continue;
+    scores.push(item.reverse ? reverseScore(raw) : raw);
   }
 
   if (scores.length === 0) return { mean: null, category: null, itemsAnswered: 0 };
-
   const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
   return {
     mean: Math.round(mean * 100) / 100,
@@ -127,9 +133,17 @@ function scoreNatsal(fields) {
 }
 
 function scoreSSE(fields) {
-  const comm    = likertScore(fields, FIELD.sse_comm,    CONFIDENCE_5);
-  const pleasure = likertScore(fields, FIELD.sse_pleasure, CONFIDENCE_5);
-  const scores  = [comm, pleasure].filter(s => s !== null);
+  const rows = getMatrixRows(fields, MATRIX_LABEL_SSE);
+  if (rows.length === 0) return { mean: null, category: null };
+
+  const scores = SSE_ITEMS
+    .map(text => {
+      const row = rows.find(r => r.label === text);
+      if (!row || !row.value) return null;
+      return CONFIDENCE_5[row.value] ?? null;
+    })
+    .filter(s => s !== null);
+
   if (scores.length === 0) return { mean: null, category: null };
   const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
   return {
@@ -144,19 +158,21 @@ async function upsertBrevoContact({ email, natsalCategory, sseCategory, demograp
   const body = {
     email,
     updateEnabled: true,
-    listIds: [3], // TODO: replace with your actual Brevo list ID for lead magnet contacts
+    listIds: [3], // TODO: confirm your Brevo list ID for lead magnet contacts
     attributes: {
-      NATSAL_CATEGORY:  natsalCategory,
-      SSE_CATEGORY:     sseCategory,
-      AGE:              demographics.age        || '',
-      GENDER:           demographics.gender      || '',
-      GENDER_DIVERSE:   demographics.genderDiverse || '',
-      ORIENTATION:      demographics.orientation || '',
-      RELATIONSHIP:     demographics.relationship || '',
-      LOCATION:         demographics.location    || '',
-      TOPICS:           Array.isArray(demographics.topics) ? demographics.topics.join(', ') : (demographics.topics || ''),
-      REFERRAL:         demographics.referral    || '',
-      LEAD_SOURCE:      'Sexual Wellbeing Snapshot',
+      NATSAL_CATEGORY: natsalCategory,
+      SSE_CATEGORY:    sseCategory,
+      AGE:             demographics.age           || '',
+      GENDER:          demographics.gender         || '',
+      GENDER_DIVERSE:  demographics.genderDiverse  || '',
+      ORIENTATION:     demographics.orientation    || '',
+      RELATIONSHIP:    demographics.relationship   || '',
+      LOCATION:        demographics.location       || '',
+      TOPICS:          Array.isArray(demographics.topics)
+                         ? demographics.topics.join(', ')
+                         : (demographics.topics || ''),
+      REFERRAL:        demographics.referral       || '',
+      LEAD_SOURCE:     'Sexual Wellbeing Snapshot',
     },
   };
 
@@ -170,7 +186,7 @@ async function upsertBrevoContact({ email, natsalCategory, sseCategory, demograp
     body: JSON.stringify(body),
   });
 
-  // 201 = created, 204 = updated, both are success
+  // 201 = created, 204 = updated — both are success
   if (!res.ok && res.status !== 204) {
     const text = await res.text();
     throw new Error(`Brevo contacts API error ${res.status}: ${text}`);
@@ -178,18 +194,6 @@ async function upsertBrevoContact({ email, natsalCategory, sseCategory, demograp
 }
 
 async function sendResultEmail({ email, category }) {
-  const subjectMap = {
-    Lower:    'Your Sexual Wellbeing Snapshot results',
-    Moderate: 'Your Sexual Wellbeing Snapshot results',
-    Higher:   'Your Sexual Wellbeing Snapshot results',
-  };
-
-  const introMap = {
-    Lower:    "Thank you for completing the Sexual Wellbeing Snapshot. Your results and a personalised resource are ready for you below.",
-    Moderate: "Thank you for completing the Sexual Wellbeing Snapshot. Your results and a personalised resource are ready for you below.",
-    Higher:   "Thank you for completing the Sexual Wellbeing Snapshot. Your results and a personalised resource are ready for you below.",
-  };
-
   const pdfLink = PDF_LINKS[category];
 
   const htmlContent = `
@@ -197,7 +201,7 @@ async function sendResultEmail({ email, category }) {
       <img src="https://cdn.prod.website-files.com/634b8f3a862a6780aba57bb8/634b926d6668dd1ede85b43f_CRSW_Web_Logo.png"
            alt="Centre for Relational and Sexual Wellbeing"
            style="height: 50px; margin-bottom: 24px;" />
-      <p>${introMap[category]}</p>
+      <p>Thank you for completing the Sexual Wellbeing Snapshot. Your personalised result and resource are ready below.</p>
       <p><strong>Your result: ${category} Sexual Wellbeing</strong></p>
       <p>
         <a href="${pdfLink}"
@@ -226,9 +230,9 @@ async function sendResultEmail({ email, category }) {
       'api-key':      process.env.BREVO_API_KEY,
     },
     body: JSON.stringify({
-      sender:     { name: 'Centre for Relational and Sexual Wellbeing', email: 'hello@centrersw.com' },
-      to:         [{ email }],
-      subject:    subjectMap[category],
+      sender:      { name: 'Centre for Relational and Sexual Wellbeing', email: 'hello@centrersw.com' },
+      to:          [{ email }],
+      subject:     'Your Sexual Wellbeing Snapshot results',
       htmlContent,
     }),
   });
@@ -249,14 +253,19 @@ export default async function handler(req, res) {
   try {
     const payload = req.body;
 
-    // Tally sends { eventId, eventType, createdAt, data: { fields: [...] } }
+    // Tally sends: { eventId, eventType, createdAt, data: { fields: [...] } }
     if (!payload?.data?.fields) {
       return res.status(400).json({ error: 'Invalid Tally payload' });
     }
 
     const { fields } = payload.data;
 
-    // Extract email
+    // Log raw payload in development to verify Matrix field structure
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Raw fields:', JSON.stringify(fields, null, 2));
+    }
+
+    // Email
     const email = getField(fields, FIELD.email);
     if (!email) {
       console.error('No email in submission');
@@ -284,7 +293,7 @@ export default async function handler(req, res) {
       referral:      getField(fields, FIELD.referral),
     };
 
-    // Add/update contact in Brevo, then send result email
+    // Add/update Brevo contact, then send result email
     await upsertBrevoContact({
       email,
       natsalCategory: natsal.category,
@@ -294,7 +303,9 @@ export default async function handler(req, res) {
 
     await sendResultEmail({ email, category: natsal.category });
 
-    console.log(`Snapshot complete: ${email} → ${natsal.category} (mean ${natsal.mean}, n=${natsal.itemsAnswered}) | SSE: ${sse.category} (mean ${sse.mean})`);
+    console.log(
+      `Snapshot: ${email} → ${natsal.category} (mean ${natsal.mean}, n=${natsal.itemsAnswered}) | SSE: ${sse.category} (mean ${sse.mean})`
+    );
 
     return res.status(200).json({ success: true, category: natsal.category });
 
